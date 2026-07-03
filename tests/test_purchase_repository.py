@@ -1,123 +1,259 @@
+"""
+Test Purchase Repository
+"""
+
+from datetime import datetime
+
 from database.purchase_repository import PurchaseRepository
 
 repo = PurchaseRepository()
 
 
 def get_supplier_id():
+
     supplier = repo.fetch_one(
-        "SELECT supplier_id FROM suppliers WHERE supplier_code=%s",
+        "SELECT supplier_id FROM mgbrush.suppliers WHERE supplier_code=%s",
         ("SUP001",)
     )
+
+    if supplier is None:
+        raise Exception("Supplier SUP001 not found.")
+
     return supplier["supplier_id"]
 
 
 def get_user_id():
+
     user = repo.fetch_one(
-        "SELECT user_id FROM users WHERE username=%s",
+        "SELECT user_id FROM mgbrush.users WHERE username=%s",
         ("admin",)
     )
+
+    if user is None:
+        raise Exception("Admin user not found.")
+
     return user["user_id"]
 
 
 def get_item():
-    item = repo.fetch_one("""
-        SELECT item_id, unit_id
-        FROM items
+
+    item = repo.fetch_one(
+        """
+        SELECT
+            item_id,
+            unit_id
+        FROM mgbrush.items
+        ORDER BY item_id
         LIMIT 1
-    """)
+        """
+    )
+
+    if item is None:
+        raise Exception("No Item found.")
+
     return item
 
-supplier_id = get_supplier_id()
-user_id = get_user_id()
+def get_tax_id():
 
-purchase = {
+    tax = repo.fetch_one(
+        """
+        SELECT tax_id
+        FROM mgbrush.tax_master
+        ORDER BY tax_id
+        LIMIT 1
+        """
+    )
 
-    "purchase_no": "PUR000001",
+    if tax is None:
+        raise Exception("No Tax found.")
 
-    "supplier_id": supplier_id,
+    return tax["tax_id"]
 
-    "invoice_no": "INV1001",
 
-    "invoice_date": "2026-07-03",
+def main():
 
-    "purchase_date": "2026-07-03",
+    supplier_id = get_supplier_id()
+    user_id = get_user_id()
+    item = get_item()
+    tax_id = get_tax_id()
 
-    "subtotal": 1000,
+    purchase = {
 
-    "discount_amount": 0,
+        "purchase_no": f"PUR{datetime.now().strftime('%Y%m%d%H%M%S')}",
 
-    "taxable_amount": 1000,
+        "supplier_id": supplier_id,
 
-    "cgst_amount": 90,
+        "invoice_no": "INV1001",
 
-    "sgst_amount": 90,
+        "invoice_date": "2026-07-03",
 
-    "igst_amount": 0,
+        "purchase_date": "2026-07-03",
 
-    "cess_amount": 0,
+        "subtotal": 1000,
 
-    "freight_amount": 50,
+        "discount_amount": 0,
 
-    "other_charges": 0,
+        "taxable_amount": 1000,
 
-    "round_off": 0,
+        "cgst_amount": 90,
 
-    "grand_total": 1230,
+        "sgst_amount": 90,
 
-    "payment_status": "PENDING",
+        "igst_amount": 0,
 
-    "remarks": "Repository Test",
+        "cess_amount": 0,
 
-    "created_by": user_id
+        "freight_amount": 50,
 
-}
+        "other_charges": 0,
 
-purchase_id = repo.create_purchase(purchase)
+        "round_off": 0,
 
-print(f"Purchase Created : {purchase_id}")
+        "grand_total": 1230,
 
-item = get_item()
+        "payment_status": "PENDING",
 
-detail = {
+        "remarks": "Repository Test",
 
-    "purchase_id": purchase_id,
+        "created_by": user_id
 
-    "line_no": 1,
+    }
 
-    "item_id": item["item_id"],
+    print("=" * 60)
+    print("CREATE PURCHASE")
+    print("=" * 60)
 
-    "unit_id": item["unit_id"],
+    purchase_id = repo.create_purchase(purchase)
 
-    "quantity": 10,
+    print("Purchase ID :", purchase_id)
 
-    "rate": 100,
+    detail = {
 
-    "discount_percent": 0,
+        "purchase_id": purchase_id,
 
-    "discount_amount": 0,
+        "item_id": item["item_id"],
 
-    "taxable_amount": 1000,
+        "unit_id": item["unit_id"],
 
-    "cgst_percent": 9,
+        "quantity": 10,
 
-    "cgst_amount": 90,
+        "rate": 100,
 
-    "sgst_percent": 9,
+        "discount_percent": 0,
 
-    "sgst_amount": 90,
+        "discount_amount": 0,
 
-    "igst_percent": 0,
+        "taxable_amount": 1000,
 
-    "igst_amount": 0,
+        "tax_id": tax_id,
 
-    "total_amount": 1180
+        "cgst_amount": 90,
 
-}
+        "sgst_amount": 90,
 
-detail_id = repo.create_purchase_item(detail)
+        "igst_amount": 0,
 
-print(f"Detail Created : {detail_id}")
+        "total_amount": 1180
 
-items = repo.get_purchase_items(purchase_id)
+    }
 
-print(items)
+    print("=" * 60)
+    print("CREATE PURCHASE ITEM")
+    print("=" * 60)
+
+    purchase_detail_id = repo.create_purchase_item(detail)
+
+    print("Purchase Detail :", purchase_detail_id)
+
+    print("=" * 60)
+    print("GET PURCHASE")
+    print("=" * 60)
+
+    print(repo.get_purchase_by_id(purchase_id))
+
+    print("=" * 60)
+    print("LIST PURCHASES")
+    print("=" * 60)
+
+    purchases = repo.list_purchases()
+
+    print(f"Total Purchases : {len(purchases)}")
+
+    print("=" * 60)
+    print("GET PURCHASE ITEMS")
+    print("=" * 60)
+
+    print(repo.get_purchase_items(purchase_id))
+
+    print("=" * 60)
+    print("UPDATE PURCHASE")
+    print("=" * 60)
+
+    purchase["remarks"] = "Purchase Updated"
+
+    purchase["grand_total"] = 1500
+
+    rows = repo.update_purchase(
+        purchase_id,
+        purchase
+    )
+
+    print("Rows Updated :", rows)
+
+    print(repo.get_purchase_by_id(purchase_id))
+
+    print("=" * 60)
+    print("UPDATE PURCHASE ITEM")
+    print("=" * 60)
+
+    detail["purchase_detail_id"] = purchase_detail_id
+
+    detail["quantity"] = 25
+    detail["rate"] = 120
+    detail["discount_percent"] = 5
+    detail["discount_amount"] = 150
+    detail["taxable_amount"] = 2850
+    detail["tax_id"] = tax_id
+    detail["cgst_amount"] = 256.50
+    detail["sgst_amount"] = 256.50
+    detail["igst_amount"] = 0
+    detail["total_amount"] = 3363
+
+    rows = repo.update_purchase_item(detail)
+
+    print("Rows Updated :", rows)
+
+    print(repo.get_purchase_items(purchase_id))
+
+    print("=" * 60)
+    print("DELETE PURCHASE ITEM")
+    print("=" * 60)
+
+    rows = repo.delete_purchase_item(
+        purchase_detail_id
+    )
+
+    print("Rows Deleted :", rows)
+
+    print(repo.get_purchase_items(purchase_id))
+
+    print("=" * 60)
+    print("DELETE PURCHASE")
+    print("=" * 60)
+
+    rows = repo.delete_purchase(
+        purchase_id
+    )
+
+    print("Rows Deleted :", rows)
+
+    print(repo.get_purchase_by_id(purchase_id))
+
+    print("=" * 60)
+    print("ALL PURCHASE REPOSITORY TESTS PASSED")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+
+    main()

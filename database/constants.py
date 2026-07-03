@@ -1,0 +1,29 @@
+"""
+Database Constants
+"""
+
+from config import DB
+
+
+class Schema:
+    NAME = DB.schema
+
+
+class Tables:
+
+    PURCHASE_HEADER = f"{Schema.NAME}.purchase_header"
+    PURCHASE_DETAIL = f"{Schema.NAME}.purchase_details"
+
+    SUPPLIERS = f"{Schema.NAME}.suppliers"
+    CUSTOMERS = f"{Schema.NAME}.customers"
+
+    ITEMS = f"{Schema.NAME}.items"
+    ITEM_CATEGORY = f"{Schema.NAME}.item_category"
+
+    UNIT_MASTER = f"{Schema.NAME}.unit_master"
+    TAX_MASTER = f"{Schema.NAME}.tax_master"
+
+    USERS = f"{Schema.NAME}.users"
+    ROLES = f"{Schema.NAME}.roles"
+
+    COMPANY = f"{Schema.NAME}.company"
