@@ -125,3 +125,56 @@ class PurchaseRepository(BaseRepository):
             Tables.PURCHASE_DETAIL,
             {"purchase_detail_id": purchase_detail_id}
         )
+    
+    def get_supplier(
+        self,
+        supplier_id: int
+    ) -> dict | None:
+
+        return self.find_one(
+            Tables.SUPPLIERS,
+            {
+                "supplier_id": supplier_id,
+                "is_active": True
+            }
+        )
+    
+    def get_item(
+        self,
+        item_id: int
+    ) -> dict | None:
+
+        return self.find_one(
+            Tables.ITEMS,
+            {
+                "item_id": item_id,
+                "is_active": True
+            }
+        )
+    
+    def get_tax(
+        self,
+        tax_id: int
+    ) -> dict | None:
+
+        return self.find_one(
+            Tables.TAX_MASTER,
+            {
+                "tax_id": tax_id,
+                "is_active": True
+            }
+        )
+    
+    def exists_purchase_no(
+        self,
+        purchase_no: str
+    ) -> bool:
+
+        purchase = self.find_one(
+            Tables.PURCHASE_HEADER,
+            {
+                "purchase_no": purchase_no
+            }
+        )
+
+        return purchase is not None

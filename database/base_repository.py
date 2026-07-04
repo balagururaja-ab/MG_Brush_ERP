@@ -247,3 +247,183 @@ class BaseRepository:
     def rollback(self):
 
         self.conn.rollback()
+
+    def find_by_id(
+        self,
+        table: str,
+        id_column: str,
+        id_value
+    ) -> dict | None:
+
+        sql = f"""
+            SELECT *
+            FROM {table}
+            WHERE {id_column} = %s
+        """
+
+        return self.fetch_one(sql, (id_value,))
+    
+    def exists(
+        self,
+        table: str,
+        conditions: dict
+    ) -> bool:
+
+        where_clause = " AND ".join(
+            f"{column}=%s"
+            for column in conditions.keys()
+        )
+
+        sql = f"""
+            SELECT 1
+            FROM {table}
+            WHERE {where_clause}
+            LIMIT 1
+        """
+
+        result = self.fetch_one(
+            sql,
+            tuple(conditions.values())
+        )
+
+        return result is not None
+    
+    def count(
+        self,
+        table: str,
+        conditions: dict | None = None
+    ) -> int:
+
+        sql = f"""
+            SELECT COUNT(*) AS total
+            FROM {table}
+        """
+
+        params = ()
+
+        if conditions:
+
+            where_clause = " AND ".join(
+                f"{column}=%s"
+                for column in conditions.keys()
+            )
+
+            sql += f" WHERE {where_clause}"
+
+            params = tuple(
+                conditions.values()
+            )
+
+        result = self.fetch_one(
+            sql,
+            params
+        )
+
+        return result["total"]
+    
+    def find_all(
+        self,
+        table: str,
+        conditions: dict | None = None,
+        order_by: str | None = None
+    ) -> list[dict]:
+
+        sql = f"""
+            SELECT *
+            FROM {table}
+        """
+
+        params = ()
+
+        if conditions:
+
+            where_clause = " AND ".join(
+                f"{column}=%s"
+                for column in conditions.keys()
+            )
+
+            sql += f" WHERE {where_clause}"
+
+            params = tuple(
+                conditions.values()
+            )
+
+        if order_by:
+
+            sql += f" ORDER BY {order_by}"
+
+        return self.fetch_all(
+            sql,
+            params
+        )
+    
+    def upsert(
+        self,
+        table: str,
+        data: dict,
+        key_columns: list[str]
+    ):
+
+        if not key_columns:
+            raise ValueError(
+                "key_columns cannot be empty."
+            )
+
+        conditions = {
+            key: data[key]
+            for key in key_columns
+        }
+
+        existing = self.find_one(
+            table,
+            conditions
+        )
+
+        if existing:
+
+            update_data = data.copy()
+
+            for key in key_columns:
+                update_data.pop(key)
+
+            return self.update(
+                table,
+                update_data,
+                conditions
+            )
+
+        return self.insert(
+            table,
+            data
+        )
+    
+    def find_value(
+        self,
+        table: str,
+        column: str,
+        conditions: dict
+    ):
+
+        where_clause = " AND ".join(
+            f"{key}=%s"
+            for key in conditions
+        )
+
+        sql = f"""
+            SELECT {column}
+            FROM {table}
+            WHERE {where_clause}
+            LIMIT 1
+        """
+
+        result = self.fetch_one(
+            sql,
+            tuple(conditions.values())
+        )
+
+        if result:
+            return result[column]
+
+        return None
+    
+    

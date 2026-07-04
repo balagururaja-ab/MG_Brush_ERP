@@ -39,10 +39,9 @@ def get_item():
 
     item = repo.fetch_one(
         """
-        SELECT
-            item_id,
-            unit_id
+        SELECT item_id
         FROM mgbrush.items
+        WHERE is_active = TRUE
         ORDER BY item_id
         LIMIT 1
         """
@@ -51,21 +50,14 @@ def get_item():
     if item is None:
         raise Exception("No Item found.")
 
-    return item
+    return repo.get_item(item["item_id"])
 
-def get_tax_id():
+def get_tax_id(item):
 
-    tax = repo.fetch_one(
-        """
-        SELECT tax_id
-        FROM mgbrush.tax_master
-        ORDER BY tax_id
-        LIMIT 1
-        """
-    )
+    tax = repo.get_tax(item["tax_id"])
 
     if tax is None:
-        raise Exception("No Tax found.")
+        raise Exception("Tax not found.")
 
     return tax["tax_id"]
 
@@ -75,7 +67,7 @@ def main():
     supplier_id = get_supplier_id()
     user_id = get_user_id()
     item = get_item()
-    tax_id = get_tax_id()
+    tax_id = get_tax_id(item)
 
     purchase = {
 
@@ -125,6 +117,8 @@ def main():
 
     purchase_id = repo.create_purchase(purchase)
 
+    assert purchase_id > 0, "Purchase creation failed"
+
     print("Purchase ID :", purchase_id)
 
     detail = {
@@ -153,7 +147,8 @@ def main():
 
         "igst_amount": 0,
 
-        "total_amount": 1180
+        "total_amount": 1180,
+        "line_no": 1
 
     }
 
@@ -163,19 +158,27 @@ def main():
 
     purchase_detail_id = repo.create_purchase_item(detail)
 
+    assert purchase_detail_id > 0, "Purchase detail creation failed"
+
     print("Purchase Detail :", purchase_detail_id)
 
     print("=" * 60)
     print("GET PURCHASE")
     print("=" * 60)
 
-    print(repo.get_purchase_by_id(purchase_id))
+    purchase_data = repo.get_purchase_by_id(purchase_id)
+    
+    assert purchase_data is not None, "Purchase not found"
+
+    print(purchase_data)
 
     print("=" * 60)
     print("LIST PURCHASES")
     print("=" * 60)
 
     purchases = repo.list_purchases()
+
+    assert len(purchases) > 0, "Purchase list is empty"
 
     print(f"Total Purchases : {len(purchases)}")
 
@@ -184,6 +187,117 @@ def main():
     print("=" * 60)
 
     print(repo.get_purchase_items(purchase_id))
+
+    print("=" * 60)
+    print("GET SUPPLIER")
+    print("=" * 60)
+
+    supplier = repo.get_supplier(supplier_id)
+
+    print(supplier)
+
+    print("=" * 60)
+    print("GET ITEM")
+    print("=" * 60)
+
+    item_data = repo.get_item(item["item_id"])
+
+    print(item_data)
+
+    print("=" * 60)
+    print("GET TAX")
+    print("=" * 60)
+
+    tax = repo.get_tax(tax_id)
+
+    print(tax)
+
+    print("=" * 60)
+    print("PURCHASE NUMBER EXISTS")
+    print("=" * 60)
+
+    exists = repo.exists_purchase_no(
+        purchase["purchase_no"]
+    )
+
+    print("Exists :", exists)
+
+    print("=" * 60)
+    print("BASE REPOSITORY - FIND BY ID")
+    print("=" * 60)
+
+    purchase_row = repo.find_by_id(
+        "mgbrush.purchase_header",
+        "purchase_id",
+        purchase_id
+    )
+
+    print(purchase_row)
+
+    print("=" * 60)
+    print("BASE REPOSITORY - EXISTS")
+    print("=" * 60)
+
+    exists = repo.exists(
+        "mgbrush.purchase_header",
+        {
+            "purchase_id": purchase_id
+        }
+    )
+
+    print("Exists :", exists)
+
+    print("=" * 60)
+    print("BASE REPOSITORY - COUNT")
+    print("=" * 60)
+
+    total = repo.count(
+        "mgbrush.purchase_header"
+    )
+
+    print("Total Purchases :", total)
+
+    print("=" * 60)
+    print("BASE REPOSITORY - FIND ALL")
+    print("=" * 60)
+
+    purchases = repo.find_all(
+        "mgbrush.purchase_header",
+        order_by="purchase_id DESC"
+    )
+
+    print("Rows :", len(purchases))
+
+    print("=" * 60)
+    print("BASE REPOSITORY - UPSERT")
+    print("=" * 60)
+
+    supplier_data = {
+
+        "supplier_code": "SUP999",
+        "supplier_name": "Unit Test Supplier",
+        "mobile": "9999999999",
+        "is_active": True
+
+    }
+
+    repo.upsert(
+        "mgbrush.suppliers",
+        supplier_data,
+        ["supplier_code"]
+    )
+
+    print("Upsert Completed")
+
+    supplier_data["supplier_name"] = "Unit Test Supplier Updated"
+
+    repo.upsert(
+        "mgbrush.suppliers",
+        supplier_data,
+        ["supplier_code"]
+    )
+
+    print("Upsert Update Completed")
 
     print("=" * 60)
     print("UPDATE PURCHASE")
@@ -198,9 +312,15 @@ def main():
         purchase
     )
 
+    assert rows == 1, "Purchase update failed"
+    
     print("Rows Updated :", rows)
 
-    print(repo.get_purchase_by_id(purchase_id))
+    purchase_data = repo.get_purchase_by_id(purchase_id)
+    
+    assert purchase_data is not None, "Purchase not found"
+
+    print(purchase_data)
 
     print("=" * 60)
     print("UPDATE PURCHASE ITEM")
