@@ -39,3 +39,25 @@ class StockTransactionType:
 class StockMovement:
     IN = "IN"
     OUT = "OUT"
+
+class Tables:
+
+    USERS = "mgbrush.users"
+
+    SUPPLIERS = "mgbrush.suppliers"
+
+    PURCHASE_HEADER = "mgbrush.purchase_header"
+
+    PURCHASE_DETAILS = "mgbrush.purchase_details"
+
+    ITEMS = "mgbrush.items"
+
+    TAX_MASTER = "mgbrush.tax_master"
+
+    UNIT_MASTER = "mgbrush.unit_master"
+
+    STOCK_TRANSACTIONS = "mgbrush.stock_transactions"
+
+    SALES_HEADER = "mgbrush.sales_header"
+
+    SALES_DETAILS = "mgbrush.sales_details"
