@@ -27,3 +27,15 @@ class Tables:
     ROLES = f"{Schema.NAME}.roles"
 
     COMPANY = f"{Schema.NAME}.company"
+
+class StockTransactionType:
+    PURCHASE = "PURCHASE"
+    SALES = "SALES"
+    PRODUCTION = "PRODUCTION"
+    ADJUSTMENT = "ADJUSTMENT"
+    OPENING = "OPENING"
+
+
+class StockMovement:
+    IN = "IN"
+    OUT = "OUT"

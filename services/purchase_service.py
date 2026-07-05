@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from database.constants import Tables
 from database.purchase_repository import PurchaseRepository
 
 
@@ -23,17 +24,12 @@ class PurchaseService:
 
     def generate_purchase_no(self) -> str:
 
-        purchases = self.repo.list_purchases()
-
-        if not purchases:
-
-            return "PUR000001"
-
-        last_purchase = purchases[0]["purchase_no"]
-
-        number = int(last_purchase.replace("PUR", ""))
-
-        return f"PUR{number + 1:06d}"
+        return self.repo.generate_next_number(
+            table=Tables.PURCHASE_HEADER,
+            id_column="purchase_id",
+            number_column="purchase_no",
+            prefix="PUR"
+        )
 
     # ---------------------------------------------------------
     # Validate Supplier

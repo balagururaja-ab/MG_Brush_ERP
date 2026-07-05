@@ -178,3 +178,14 @@ class PurchaseRepository(BaseRepository):
         )
 
         return purchase is not None
+    
+    def get_last_purchase(self):
+
+        sql = f"""
+            SELECT purchase_no
+            FROM {Tables.PURCHASE_HEADER}
+            ORDER BY purchase_id DESC
+            LIMIT 1
+        """
+
+        return self.fetch_one(sql)

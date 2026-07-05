@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+import re
 
 from database.connection import db
 
@@ -426,4 +427,51 @@ class BaseRepository:
 
         return None
     
-    
+    def generate_next_number(
+        self,
+        table: str,
+        id_column: str,
+        number_column: str,
+        prefix: str,
+        digits: int = 6
+    ) -> str:
+        """
+        Generates the next sequential document number.
+
+        Example:
+            PUR000001
+            SAL000001
+            PRD000001
+        """
+
+        query = sql.SQL(
+            """
+            SELECT {number_column}
+            FROM {table}
+            ORDER BY {id_column} DESC
+            LIMIT 1
+            """
+        ).format(
+            number_column=sql.Identifier(number_column),
+            table=sql.SQL(table),
+            id_column=sql.Identifier(id_column)
+        )
+
+        row = self.fetch_one(query)
+
+        if row is None:
+            return f"{prefix}{1:0{digits}d}"
+
+        last_number = row[number_column]
+
+        match = re.search(
+            rf"^{prefix}(\d+)$",
+            last_number
+        )
+
+        if match is None:
+            return f"{prefix}{1:0{digits}d}"
+
+        next_number = int(match.group(1)) + 1
+
+        return f"{prefix}{next_number:0{digits}d}"

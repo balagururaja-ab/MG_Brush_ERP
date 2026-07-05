@@ -71,8 +71,6 @@ def main():
 
     purchase = {
 
-        "purchase_no": f"PUR{datetime.now().strftime('%Y%m%d%H%M%S')}",
-
         "supplier_id": supplier_id,
 
         "invoice_no": "INV1001",
