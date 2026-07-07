@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import bcrypt
 import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 
 from database.user_repository import UserRepository
 
@@ -128,13 +129,31 @@ class AuthService:
     def verify_token(
         self,
         token: str
-    ) -> dict:
+    ):
 
-        return jwt.decode(
-        token,
-        self.secret_key,
-        algorithms=[self.algorithm]
-    )
+        try:
+
+            return jwt.decode(
+
+                token,
+
+                self.secret_key,
+
+                algorithms=[self.algorithm]
+
+            )
+
+        except ExpiredSignatureError:
+
+            raise ValueError(
+                "Token has expired."
+            )
+
+        except InvalidTokenError:
+
+            raise ValueError(
+                "Invalid token."
+            )
 
     # ---------------------------------------------------------
     # Create User
@@ -161,6 +180,7 @@ class AuthService:
             user
         )
 
+    
     # ---------------------------------------------------------
     # Change Password
     # ---------------------------------------------------------
@@ -171,22 +191,63 @@ class AuthService:
 
         user_id: int,
 
+        old_password: str,
+
         new_password: str
 
     ):
+
+        user = self.repo.get_user(user_id)
+
+        if user is None:
+
+            raise ValueError(
+                "User not found."
+            )
+
+        if not self.verify_password(
+            old_password,
+            user["password_hash"]
+        ):
+
+            raise ValueError(
+                "Old password is incorrect."
+            )
 
         password_hash = self.hash_password(
             new_password
         )
 
-        return self.repo.update_user(
-
+        self.repo.update_user(
             user_id,
-
             {
-
                 "password_hash": password_hash
-
             }
-
         )
+
+        return True
+    
+    # ---------------------------------------------------------
+    # Get Current User
+    # ---------------------------------------------------------
+
+    def get_current_user(
+        self,
+        username: str
+    ):
+
+        user = self.repo.get_user_by_username(username)
+
+        if user is None:
+
+            raise ValueError(
+                "User not found."
+            )
+
+        if not user["active"]:
+
+            raise ValueError(
+                "User is inactive."
+            )
+
+        return user
