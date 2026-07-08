@@ -1,17 +1,19 @@
-import { Box, Typography } from "@mui/material";
+import MainLayout from "../../layouts/MainLayout";
 
 export default function Dashboard() {
-  return (
-    <Box p={3}>
-      <Typography variant="h4" gutterBottom>
-        Welcome
-      </Typography>
 
-      <Typography>Today's Purchase</Typography>
-      <Typography>Today's Sales</Typography>
-      <Typography>Current Stock</Typography>
-      <Typography>Low Stock Items</Typography>
-      <Typography>Recent Transactions</Typography>
-    </Box>
-  );
+    return (
+
+        <MainLayout>
+
+            <h2>
+
+                Welcome to MG Brush ERP
+
+            </h2>
+
+        </MainLayout>
+
+    );
+
 }
