@@ -18,29 +18,45 @@ export default function Header() {
             <Toolbar>
 
                 <Box
-
                     component="img"
-
                     src={logo}
-
                     sx={{
                         height: 150,
                         mr: 6
                     }}
-
                 />
 
-                <Box>
+                <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    sx={{ flexGrow: 1 }}
+                >
+                    MG Brush ERP
+                </Typography>
 
-                    <Typography
-                        variant="h7"
-                        fontWeight="bold"
-                    >
-                        MG Brush ERP
-                    </Typography>
-                    
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/dashboard"
+                >
+                    Dashboard
+                </Button>
 
-                </Box>
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/items"
+                >
+                    Items
+                </Button>
+
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/suppliers"
+                >
+                    Suppliers
+                </Button>
 
             </Toolbar>
 
