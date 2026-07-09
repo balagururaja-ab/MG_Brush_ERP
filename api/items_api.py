@@ -12,13 +12,21 @@ router = APIRouter()
 service = ItemService()
 
 
-@router.get("/items")
+# ---------------------------------------------------------
+# Get All Items
+# ---------------------------------------------------------
+
+@router.get("")
 def get_all():
 
     return service.get_all()
 
 
-@router.get("/items/{item_id}")
+# ---------------------------------------------------------
+# Get Item By Id
+# ---------------------------------------------------------
+
+@router.get("/{item_id}")
 def get_item(item_id: int):
 
     try:
@@ -33,7 +41,11 @@ def get_item(item_id: int):
         )
 
 
-@router.post("/items")
+# ---------------------------------------------------------
+# Create Item
+# ---------------------------------------------------------
+
+@router.post("")
 def create_item(request: ItemCreate):
 
     try:
@@ -50,7 +62,11 @@ def create_item(request: ItemCreate):
         )
 
 
-@router.put("/items/{item_id}")
+# ---------------------------------------------------------
+# Update Item
+# ---------------------------------------------------------
+
+@router.put("/{item_id}")
 def update_item(
     item_id: int,
     request: ItemUpdate
@@ -71,7 +87,11 @@ def update_item(
         )
 
 
-@router.delete("/items/{item_id}")
+# ---------------------------------------------------------
+# Delete Item
+# ---------------------------------------------------------
+
+@router.delete("/{item_id}")
 def delete_item(item_id: int):
 
     try:
@@ -79,10 +99,7 @@ def delete_item(item_id: int):
         service.delete(item_id)
 
         return {
-
-            "message":
-            "Item deleted successfully."
-
+            "message": "Item deleted successfully."
         }
 
     except ValueError as ex:
