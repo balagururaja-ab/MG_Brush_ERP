@@ -54,6 +54,8 @@ class PurchaseService:
         items: list[dict]
     ):
 
+        item_ids=[]
+        
         if len(items) == 0:
 
             raise ValueError(
@@ -62,6 +64,20 @@ class PurchaseService:
 
         for item in items:
 
+            item_master = self.repo.get_item(item["item_id"])
+
+            if item_master is None:
+                raise ValueError(
+                    f"Item {item['item_id']} does not exist."
+                )
+            
+            if item["item_id"] in item_ids:
+                raise ValueError(
+                    "Duplicate Item found."
+                )
+
+            item_ids.append(item["item_id"])
+            
             if item["quantity"] <= 0:
 
                 raise ValueError(
@@ -73,6 +89,9 @@ class PurchaseService:
                 raise ValueError(
                     "Invalid Rate."
                 )
+            
+            if item["unit_id"] <= 0:
+                raise ValueError("Invalid Unit.")
 
     # ---------------------------------------------------------
     # Calculate Totals
@@ -207,3 +226,151 @@ class PurchaseService:
 
             self.repo.rollback()
             raise
+
+    # ---------------------------------------------------------
+    # Update Purchase
+    # ---------------------------------------------------------
+
+    def update_purchase(
+
+        self,
+
+        purchase_id: int,
+
+        purchase: dict,
+
+        items: list[dict]
+
+    ):
+
+        existing = self.repo.get_purchase_by_id(
+            purchase_id
+        )
+
+        if existing is None:
+
+            raise ValueError(
+                "Purchase not found."
+            )
+
+        self.validate_supplier(
+            purchase["supplier_id"]
+        )
+
+        self.validate_items(items)
+
+        totals = self.calculate_totals(items)
+
+        purchase.update(totals)
+
+        try:
+
+            # Update Purchase Header
+            self.repo.update_purchase(
+                purchase_id,
+                purchase
+            )
+
+            # Delete Existing Purchase Items
+            old_items = self.repo.get_purchase_items(
+                purchase_id
+            )
+
+            for old in old_items:
+
+                self.repo.delete_purchase_item(
+                    old["purchase_detail_id"]
+                )
+
+            # Insert New Purchase Items
+            for line_no, item in enumerate(
+                items,
+                start=1
+            ):
+
+                item["purchase_id"] = purchase_id
+
+                item["line_no"] = line_no
+
+                self.repo.create_purchase_item(
+                    item
+                )
+
+            self.repo.commit()
+
+            return purchase_id
+
+        except Exception:
+
+            self.repo.rollback()
+
+            raise
+
+    # ---------------------------------------------------------
+    # Delete Purchase
+    # ---------------------------------------------------------
+
+    def delete_purchase(
+
+        self,
+
+        purchase_id: int
+
+    ):
+
+        purchase = self.repo.get_purchase_by_id(
+            purchase_id
+        )
+
+        if purchase is None:
+
+            raise ValueError(
+                "Purchase not found."
+            )
+
+        try:
+
+            self.repo.delete_purchase(
+                purchase_id
+            )
+
+            self.repo.commit()
+
+        except Exception:
+
+            self.repo.rollback()
+
+            raise
+
+    # ---------------------------------------------------------
+    # List Purchases
+    # ---------------------------------------------------------
+
+    def list_purchases(self):
+
+        return self.repo.list_purchases()
+
+
+    # ---------------------------------------------------------
+    # Get Purchase
+    # ---------------------------------------------------------
+
+    def get_purchase(self, purchase_id: int):
+
+        purchase = self.repo.get_purchase_by_id(
+            purchase_id
+        )
+
+        if purchase is None:
+
+            raise ValueError(
+                "Purchase not found."
+            )
+
+        purchase["items"] = self.repo.get_purchase_items(
+            purchase_id
+        )
+
+        return purchase
+    
+    

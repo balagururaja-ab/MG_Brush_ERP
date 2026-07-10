@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.auth_api import router as auth_router
 from api.items_api import router as items_router
 from api.supplier_api import router as supplier_router
+from api.purchase_api import router as purchase_router
 
 app = FastAPI(title="MG Brush ERP API")
 
@@ -34,4 +35,14 @@ app.include_router(
     supplier_router,
     prefix="/api/suppliers",
     tags=["Suppliers"]
+)
+
+app.include_router(
+
+    purchase_router,
+
+    prefix="/api/purchases",
+
+    tags=["Purchase"]
+
 )
