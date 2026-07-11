@@ -1,15 +1,16 @@
 import {
-
     AppBar,
     Toolbar,
     Typography,
-    Box
-
+    Box,
+    Button
 } from "@mui/material";
+
+import { Link } from "react-router-dom";
 
 import logo from "../assets/logo.png";
 
-export default function Header() {
+export default function AppHeader() {
 
     return (
 
@@ -21,15 +22,17 @@ export default function Header() {
                     component="img"
                     src={logo}
                     sx={{
-                        height: 150,
-                        mr: 6
+                        height: 70,
+                        mr: 3
                     }}
                 />
 
                 <Typography
                     variant="h6"
-                    fontWeight="bold"
-                    sx={{ flexGrow: 1 }}
+                    sx={{
+                        flexGrow: 1,
+                        fontWeight: "bold"
+                    }}
                 >
                     MG Brush ERP
                 </Typography>
@@ -56,6 +59,14 @@ export default function Header() {
                     to="/suppliers"
                 >
                     Suppliers
+                </Button>
+
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/purchase"
+                >
+                    Purchase
                 </Button>
 
             </Toolbar>
