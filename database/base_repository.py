@@ -186,25 +186,31 @@ class BaseRepository:
     # Generic Find One
     # ------------------------------------------------------------------
 
-    def find_one(
+    def get_purchase_by_id(
         self,
-        table: str,
-        where: dict
-    ) -> dict | None:
-
-        where_clause = " AND ".join(
-            f"{column}=%s"
-            for column in where.keys()
-        )
+        purchase_id: int
+    ):
 
         sql = f"""
-            SELECT *
-            FROM {table}
-            WHERE {where_clause}
+            SELECT
+
+                ph.*,
+
+                s.supplier_name
+
+            FROM {Tables.PURCHASE_HEADER} ph
+
+            INNER JOIN {Tables.SUPPLIERS} s
+
+                ON ph.supplier_id = s.supplier_id
+
+            WHERE ph.purchase_id = %s
         """
 
-        return self.fetch_one(sql, list(where.values()))
-
+        return self.fetch_one(
+            sql,
+            (purchase_id,)
+        )
     # ------------------------------------------------------------------
     # Generic Find All
     # ------------------------------------------------------------------

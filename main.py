@@ -43,6 +43,6 @@ app.include_router(
 
     prefix="/api/purchases",
 
-    tags=["Purchase"]
+    tags=["Purchases"]
 
 )
