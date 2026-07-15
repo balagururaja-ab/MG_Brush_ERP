@@ -13,6 +13,7 @@ from typing import Any
 import re
 
 from database.connection import db
+from database.constants import Tables
 
 
 logger = logging.getLogger(__name__)
@@ -182,6 +183,33 @@ class BaseRepository:
 
         return rows
 
+    # ------------------------------------------------------------------
+    # Generic Find One
+    # ------------------------------------------------------------------
+
+    def find_one(
+        self,
+        table: str,
+        where: dict
+    ) -> dict | None:
+
+        where_clause = " AND ".join(
+            f"{column}=%s"
+            for column in where.keys()
+        )
+
+        sql = f"""
+            SELECT *
+            FROM {table}
+            WHERE {where_clause}
+            LIMIT 1
+        """
+
+        return self.fetch_one(
+            sql,
+            tuple(where.values())
+        )
+    
     # ------------------------------------------------------------------
     # Generic Find One
     # ------------------------------------------------------------------

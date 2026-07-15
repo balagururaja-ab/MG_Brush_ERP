@@ -69,6 +69,14 @@ export default function AppHeader() {
                     Purchase
                 </Button>
 
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/customers"
+                >
+                    Customers
+                </Button>
+
             </Toolbar>
 
         </AppBar>

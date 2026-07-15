@@ -5,6 +5,7 @@ from api.auth_api import router as auth_router
 from api.items_api import router as items_router
 from api.supplier_api import router as supplier_router
 from api.purchase_api import router as purchase_router
+from api.customer_api import router as customer_router
 
 app = FastAPI(title="MG Brush ERP API")
 
@@ -45,4 +46,10 @@ app.include_router(
 
     tags=["Purchases"]
 
+)
+
+app.include_router(
+    customer_router,
+    prefix="/api/customers",
+    tags=["Customers"]
 )

@@ -48,7 +48,7 @@ class Tables:
 
     PURCHASE_HEADER = "mgbrush.purchase_header"
 
-    PURCHASE_DETAILS = "mgbrush.purchase_details"
+    PURCHASE_DETAIL = "mgbrush.purchase_details"
 
     ITEMS = "mgbrush.items"
 
@@ -61,3 +61,5 @@ class Tables:
     SALES_HEADER = "mgbrush.sales_header"
 
     SALES_DETAILS = "mgbrush.sales_details"
+
+    CUSTOMERS = "mgbrush.customers"
