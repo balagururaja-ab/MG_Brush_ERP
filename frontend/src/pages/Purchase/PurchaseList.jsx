@@ -57,6 +57,8 @@ export default function PurchaseList() {
 
             const data = await getPurchases();
 
+            console.log("Purchases:", data);
+
             setRows(data);
 
         }
@@ -237,10 +239,12 @@ export default function PurchaseList() {
             <Paper sx={{ p: 3 }}>
 
                 <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={3}
+                    sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3
+                }}
                 >
 
                     <Typography

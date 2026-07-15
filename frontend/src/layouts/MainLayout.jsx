@@ -1,16 +1,30 @@
 import { Box } from "@mui/material";
-import { Outlet } from "react-router-dom";
 
 import AppHeader from "../components/AppHeader";
-import AppDrawer from "../components/AppDrawer";
+// import AppDrawer from "../components/AppDrawer";
 import AppFooter from "../components/AppFooter";
 
-export default function MainLayout() {
+export default function MainLayout({ children }) {
+
     return (
-        <Box sx={{ display: "flex", minHeight: "100vh" }}>
+
+        <Box
+            sx={{
+                display: "flex",
+                minHeight: "100vh"
+            }}
+        >
+
             {/* <AppDrawer /> */}
 
-            <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column"
+                }}
+            >
+
                 <AppHeader />
 
                 <Box
@@ -21,11 +35,17 @@ export default function MainLayout() {
                         bgcolor: "#f5f5f5"
                     }}
                 >
-                    <Outlet />
+
+                    {children}
+
                 </Box>
 
                 <AppFooter />
+
             </Box>
+
         </Box>
+
     );
+
 }

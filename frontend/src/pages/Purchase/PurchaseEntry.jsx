@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     Paper,
     Typography,
@@ -36,6 +37,8 @@ export default function PurchaseEntry() {
     });
 
     const [items, setItems] = useState([]);
+
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
 
@@ -117,6 +120,7 @@ export default function PurchaseEntry() {
 
                     <Button
                         variant="outlined"
+                        onClick={() => navigate("/purchases")}
                     >
                         Cancel
                     </Button>
