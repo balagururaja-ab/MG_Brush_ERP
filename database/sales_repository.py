@@ -74,74 +74,44 @@ class SalesRepository(BaseRepository):
         return self.fetch_all(sql)
 
     # ---------------------------------------------------------
-    # Create Sales
+    # Create Sales Header
     # ---------------------------------------------------------
 
     def create_sales(
         self,
-        sales_header: dict,
-        items: list
-    ):
+        sales_header: dict
+    ) -> int:
 
-        sales_id = self.insert(
+        return self.insert(
             Tables.SALES_HEADER,
-            sales_header
+            sales_header,
+            "sales_id"
         )
 
-        for line_no, item in enumerate(items, start=1):
-
-            item["sales_id"] = sales_id
-            item["line_no"] = line_no
-
-            self.insert(
-                Tables.SALES_DETAILS,
-                item
-            )
-
-        self.commit()
-
-        return sales_id
-
     # ---------------------------------------------------------
-    # Update Sales
+    # Update Sales Header
     # ---------------------------------------------------------
 
     def update_sales(
         self,
         sales_id: int,
-        sales_header: dict,
-        items: list
+        sales_header: dict
     ):
 
-        self.update(
+        return self.update(
+
             Tables.SALES_HEADER,
+
             sales_header,
+
             {
                 "sales_id": sales_id
             }
+
         )
-
-        self.delete(
-            Tables.SALES_DETAILS,
-            {
-                "sales_id": sales_id
-            }
-        )
-
-        for line_no, item in enumerate(items, start=1):
-
-            item["sales_id"] = sales_id
-            item["line_no"] = line_no
-
-            self.insert(
-                Tables.SALES_DETAILS,
-                item
-            )
-
-        self.commit()
 
     # ---------------------------------------------------------
-    # Delete Sales
+    # Delete Sales Header
     # ---------------------------------------------------------
 
     def delete_sales(
@@ -149,11 +119,84 @@ class SalesRepository(BaseRepository):
         sales_id: int
     ):
 
-        self.delete(
+        return self.delete(
+
             Tables.SALES_HEADER,
+
             {
                 "sales_id": sales_id
             }
+
         )
 
-        self.commit()
+    # ---------------------------------------------------------
+    # Create Sales Item
+    # ---------------------------------------------------------
+
+    def create_sales_item(
+        self,
+        item: dict
+    ):
+
+        return self.insert(
+            Tables.SALES_DETAILS,
+            item,
+            "sales_detail_id"
+        )
+    
+    # ---------------------------------------------------------
+    # Delete Sales Item
+    # ---------------------------------------------------------
+
+    def delete_sales_item(
+        self,
+        sales_detail_id: int
+    ):
+
+        return self.delete(
+
+            Tables.SALES_DETAILS,
+
+            {
+                "sales_detail_id": sales_detail_id
+            }
+
+        )
+    
+    # ---------------------------------------------------------
+    # Delete All Sales Items
+    # ---------------------------------------------------------
+
+    def delete_sales_items(
+        self,
+        sales_id: int
+    ):
+
+        return self.delete(
+
+            Tables.SALES_DETAILS,
+
+            {
+                "sales_id": sales_id
+            }
+
+        )
+    
+    # ---------------------------------------------------------
+    # Get Customer
+    # ---------------------------------------------------------
+
+    def get_customer(
+        self,
+        customer_id: int
+    ):
+
+        return self.find_one(
+
+            Tables.CUSTOMERS,
+
+            {
+                "customer_id": customer_id
+            }
+
+        )

@@ -10,6 +10,7 @@ from datetime import date
 
 from database.constants import Tables
 from database.purchase_repository import PurchaseRepository
+from services.stock_service import StockService
 
 
 class PurchaseService:
@@ -17,6 +18,8 @@ class PurchaseService:
     def __init__(self):
 
         self.repo = PurchaseRepository()
+
+        self.stock_service = StockService()
 
     # ---------------------------------------------------------
     # Generate Purchase Number
@@ -214,9 +217,24 @@ class PurchaseService:
             for index, item in enumerate(items, start=1):
 
                 item["purchase_id"] = purchase_id
+
                 item["line_no"] = index
 
                 self.repo.create_purchase_item(item)
+
+                # ---------------------------------------------
+                # Update Inventory
+                # ---------------------------------------------
+
+                self.stock_service.purchase_stock(
+
+                    purchase_id=purchase_id,
+
+                    purchase_no=purchase["purchase_no"],
+
+                    item=item
+
+                )
 
             self.repo.commit()
 
@@ -282,6 +300,16 @@ class PurchaseService:
                     old["purchase_detail_id"]
                 )
 
+            # -------------------------------------------------
+            # TODO
+            #
+            # Reverse previous stock entries
+            # and recreate them after inserting
+            # the updated purchase items.
+            #
+            # Will be implemented in Stock Module Phase-2.
+            # -------------------------------------------------
+            
             # Insert New Purchase Items
             for line_no, item in enumerate(
                 items,
@@ -330,6 +358,9 @@ class PurchaseService:
 
         try:
 
+            # TODO:
+            # Reverse stock ledger and stock balance
+            # before deleting purchase.
             self.repo.delete_purchase(
                 purchase_id
             )

@@ -12,6 +12,12 @@ import CustomerForm from "./pages/Customer/CustomerForm";
 import SalesList from "./pages/Sales/SalesList";
 import SalesEntry from "./pages/Sales/SalesEntry";
 import SalesView from "./pages/Sales/SalesView";
+import StockDashboard from "./pages/Stock/StockDashboard";
+import StockSummary from "./pages/Stock/StockSummary";
+import StockLedger from "./pages/Stock/StockLedger";
+import ItemLedger from "./pages/Stock/ItemLedger";
+import OpeningStock from "./pages/Stock/OpeningStock";
+import LowStock from "./pages/Stock/LowStock";
 
 function App() {
     return (
@@ -44,6 +50,35 @@ function App() {
                 <Route path="/sales/new" element={<SalesEntry />} />
                 <Route path="/sales/:id" element={<SalesView />} />
                 <Route path="/sales/edit/:id" element={<SalesEntry />} />
+                <Route
+                    path="/stock/dashboard"
+                    element={<StockDashboard />}
+                />
+
+                <Route
+                    path="/stock"
+                    element={<StockSummary />}
+                />
+
+                <Route
+                    path="/stock/ledger"
+                    element={<StockLedger />}
+                />
+
+                <Route
+                    path="/stock/item/:itemId"
+                    element={<ItemLedger />}
+                />
+
+                <Route
+                    path="/stock/opening"
+                    element={<OpeningStock />}
+                />
+
+                <Route
+                    path="/stock/low-stock"
+                    element={<LowStock />}
+                />
             </Routes>
         </>
     );

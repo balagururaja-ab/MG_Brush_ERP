@@ -63,3 +63,7 @@ class Tables:
     SALES_DETAILS = "mgbrush.sales_details"
 
     CUSTOMERS = "mgbrush.customers"
+
+    STOCK_LEDGER = "mgbrush.stock_ledger"
+
+    STOCK_BALANCE = "mgbrush.stock_balance"

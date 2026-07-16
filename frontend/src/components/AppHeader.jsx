@@ -64,7 +64,7 @@ export default function AppHeader() {
                 <Button
                     color="inherit"
                     component={Link}
-                    to="/purchase"
+                    to="/purchases"
                 >
                     Purchase
                 </Button>
@@ -83,6 +83,14 @@ export default function AppHeader() {
                     to="/sales"
                 >
                     Sales
+                </Button>
+
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/stock/dashboard"
+                >
+                    Stock
                 </Button>
 
             </Toolbar>

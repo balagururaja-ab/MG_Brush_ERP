@@ -8,8 +8,6 @@ import {
 
 import {
 
-    Box,
-
     Paper,
 
     Typography,
@@ -28,6 +26,8 @@ import {
 
     CircularProgress,
 
+    Box,
+
     Button,
 
     Stack,
@@ -42,25 +42,17 @@ import SearchIcon from "@mui/icons-material/Search";
 
 import RefreshIcon from "@mui/icons-material/Refresh";
 
-import VisibilityIcon from "@mui/icons-material/Visibility";
-
-import {
-
-    useNavigate
-
-} from "react-router-dom";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 import MainLayout from "../../layouts/MainLayout";
 
 import {
 
-    getStockSummary
+    getLowStock
 
 } from "../../api/stockApi";
 
-export default function StockSummary() {
-
-    const navigate = useNavigate();
+export default function LowStock() {
 
     const [stocks, setStocks] = useState([]);
 
@@ -76,7 +68,7 @@ export default function StockSummary() {
 
             setLoading(true);
 
-            const data = await getStockSummary();
+            const data = await getLowStock();
 
             setStocks(data);
 
@@ -103,6 +95,7 @@ export default function StockSummary() {
         loadStocks();
 
     }, []);
+
         useEffect(() => {
 
         if (search.trim() === "") {
@@ -119,21 +112,15 @@ export default function StockSummary() {
 
             stocks.filter(
 
-                (item) =>
+                (row) =>
 
-                    item.item_code
+                    row.item_code
                         ?.toLowerCase()
                         .includes(keyword)
 
                     ||
 
-                    item.item_name
-                        ?.toLowerCase()
-                        .includes(keyword)
-
-                    ||
-
-                    item.warehouse
+                    row.item_name
                         ?.toLowerCase()
                         .includes(keyword)
 
@@ -141,16 +128,28 @@ export default function StockSummary() {
 
         );
 
-    }, [search, stocks]);
+    }, [
+
+        search,
+
+        stocks
+
+    ]);
+
         return (
 
         <MainLayout>
 
             <Paper
+
                 elevation={3}
+
                 sx={{
+
                     p: 3
+
                 }}
+
             >
 
                 <Stack
@@ -173,7 +172,7 @@ export default function StockSummary() {
 
                     >
 
-                        Stock Summary
+                        Low Stock Report
 
                     </Typography>
 
@@ -197,16 +196,24 @@ export default function StockSummary() {
 
                     fullWidth
 
-                    placeholder="Search Item Code / Item Name / Warehouse"
+                    placeholder="Search Item"
 
                     value={search}
 
                     onChange={(e) =>
-                        setSearch(e.target.value)
+
+                        setSearch(
+
+                            e.target.value
+
+                        )
+
                     }
 
                     sx={{
+
                         mb: 3
+
                     }}
 
                     InputProps={{
@@ -253,9 +260,7 @@ export default function StockSummary() {
 
                     (
 
-                        <TableContainer
-                            component={Paper}
-                        >
+                        <TableContainer component={Paper}>
 
                             <Table>
 
@@ -275,55 +280,21 @@ export default function StockSummary() {
 
                                         </TableCell>
 
-                                        <TableCell>
-
-                                            Warehouse
-
-                                        </TableCell>
-
-                                        <TableCell
-                                            align="right"
-                                        >
+                                        <TableCell align="right">
 
                                             Current Qty
 
                                         </TableCell>
 
-                                        <TableCell
-                                            align="right"
-                                        >
+                                        <TableCell align="right">
 
-                                            Average Cost
+                                            Reorder Level
 
                                         </TableCell>
 
-                                        <TableCell
-                                            align="right"
-                                        >
+                                        <TableCell align="center">
 
-                                            Last Purchase Cost
-
-                                        </TableCell>
-
-                                        <TableCell
-                                            align="right"
-                                        >
-
-                                            Inventory Value
-
-                                        </TableCell>
-
-                                        <TableCell>
-
-                                            Updated
-
-                                        </TableCell>
-
-                                        <TableCell
-                                            align="center"
-                                        >
-
-                                            Action
+                                            Status
 
                                         </TableCell>
 
@@ -331,7 +302,8 @@ export default function StockSummary() {
 
                                 </TableHead>
 
-                                <TableBody>                                {
+                                <TableBody>
+                                                                    {
 
                                     filteredStocks.length > 0 ?
 
@@ -340,8 +312,11 @@ export default function StockSummary() {
                                         filteredStocks.map((row) => (
 
                                             <TableRow
+
                                                 key={row.item_id}
+
                                                 hover
+
                                             >
 
                                                 <TableCell>
@@ -356,117 +331,79 @@ export default function StockSummary() {
 
                                                 </TableCell>
 
-                                                <TableCell>
-
-                                                    {row.warehouse}
-
-                                                </TableCell>
-
                                                 <TableCell
+
                                                     align="right"
+
                                                 >
-
-                                                    {Number(
-                                                        row.current_qty
-                                                    ).toFixed(3)}
-
-                                                </TableCell>
-
-                                                <TableCell
-                                                    align="right"
-                                                >
-
-                                                    ₹ {Number(
-                                                        row.average_cost
-                                                    ).toFixed(2)}
-
-                                                </TableCell>
-
-                                                <TableCell
-                                                    align="right"
-                                                >
-
-                                                    ₹ {Number(
-                                                        row.last_purchase_cost
-                                                    ).toFixed(2)}
-
-                                                </TableCell>
-
-                                                <TableCell
-                                                    align="right"
-                                                >
-
-                                                    ₹ {
-
-                                                        (
-
-                                                            Number(
-                                                                row.current_qty
-                                                            )
-
-                                                            *
-
-                                                            Number(
-                                                                row.average_cost
-                                                            )
-
-                                                        ).toFixed(2)
-
-                                                    }
-
-                                                </TableCell>
-
-                                                <TableCell>
 
                                                     {
 
-                                                        row.updated_at ?
+                                                        Number(
 
-                                                        new Date(
+                                                            row.current_qty
 
-                                                            row.updated_at
-
-                                                        ).toLocaleString()
-
-                                                        :
-
-                                                        "-"
+                                                        ).toFixed(3)
 
                                                     }
 
                                                 </TableCell>
 
                                                 <TableCell
-                                                    align="center"
+
+                                                    align="right"
+
                                                 >
 
-                                                    <Button
+                                                    {
 
-                                                        size="small"
+                                                        Number(
 
-                                                        variant="outlined"
+                                                            row.reorder_level
 
-                                                        startIcon={
+                                                        ).toFixed(3)
 
-                                                            <VisibilityIcon />
+                                                    }
 
-                                                        }
+                                                </TableCell>
 
-                                                        onClick={() =>
+                                                <TableCell
 
-                                                            navigate(
+                                                    align="center"
 
-                                                                `/stock/item/${row.item_id}`
+                                                >
 
-                                                            )
+                                                    <Stack
 
-                                                        }
+                                                        direction="row"
+
+                                                        spacing={1}
+
+                                                        justifyContent="center"
+
+                                                        alignItems="center"
 
                                                     >
 
-                                                        Ledger
+                                                        <WarningAmberIcon
 
-                                                    </Button>
+                                                            color="warning"
+
+                                                        />
+
+                                                        <Typography
+
+                                                            color="error"
+
+                                                            fontWeight="bold"
+
+                                                        >
+
+                                                            LOW STOCK
+
+                                                        </Typography>
+
+                                                    </Stack>
 
                                                 </TableCell>
 
@@ -484,13 +421,13 @@ export default function StockSummary() {
 
                                             <TableCell
 
-                                                colSpan={9}
+                                                colSpan={5}
 
                                                 align="center"
 
                                             >
 
-                                                No Stock Records Found
+                                                No Low Stock Items Found
 
                                             </TableCell>
 
