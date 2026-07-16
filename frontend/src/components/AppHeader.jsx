@@ -77,6 +77,14 @@ export default function AppHeader() {
                     Customers
                 </Button>
 
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/sales"
+                >
+                    Sales
+                </Button>
+
             </Toolbar>
 
         </AppBar>

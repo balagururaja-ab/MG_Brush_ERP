@@ -9,6 +9,9 @@ import PurchaseEntry from "./pages/Purchase/PurchaseEntry";
 import PurchaseView from "./pages/Purchase/PurchaseView";
 import CustomerList from "./pages/Customer/CustomerList";
 import CustomerForm from "./pages/Customer/CustomerForm";
+import SalesList from "./pages/Sales/SalesList";
+import SalesEntry from "./pages/Sales/SalesEntry";
+import SalesView from "./pages/Sales/SalesView";
 
 function App() {
     return (
@@ -37,6 +40,10 @@ function App() {
                     path="/customer/edit/:id"
                     element={<CustomerForm />}
                 />
+                <Route path="/sales" element={<SalesList />} />
+                <Route path="/sales/new" element={<SalesEntry />} />
+                <Route path="/sales/:id" element={<SalesView />} />
+                <Route path="/sales/edit/:id" element={<SalesEntry />} />
             </Routes>
         </>
     );
