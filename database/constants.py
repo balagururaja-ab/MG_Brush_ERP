@@ -67,3 +67,7 @@ class Tables:
     STOCK_LEDGER = "mgbrush.stock_ledger"
 
     STOCK_BALANCE = "mgbrush.stock_balance"
+
+    ORDER_HEADER = "mgbrush.order_header"
+
+    ORDER_DETAILS = "mgbrush.order_details"

@@ -22,6 +22,8 @@ import {
     useState
 } from "react";
 
+import AppHeader from "../../components/AppHeader";
+
 import {
     getSuppliers,
     deleteSupplier
@@ -285,7 +287,11 @@ export default function SupplierList() {
     ];
         return (
 
-        <Box sx={{ p: 3 }}>
+        <>
+
+            <AppHeader />
+
+            <Box sx={{ p: 3 }}>
 
             <Paper sx={{ p: 3 }}>
 
@@ -372,7 +378,9 @@ export default function SupplierList() {
 
             />
 
-        </Box>
+                </Box>
+
+    </>
 
     );
 

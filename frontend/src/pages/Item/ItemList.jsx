@@ -23,6 +23,8 @@ import {
 
 import ItemForm from "./ItemForm";
 
+import AppHeader from "../../components/AppHeader";
+
 export default function ItemList() {
 
     const [items, setItems] = useState([]);
@@ -223,124 +225,99 @@ export default function ItemList() {
 
     return (
 
-        <Box>
+        <>
 
-            <Typography
-                variant="h4"
-                fontWeight="bold"
-                gutterBottom
+            <AppHeader />
+
+            <Box
+                sx={{
+                    p: 3
+                }}
             >
-                Item Master
-            </Typography>
 
-            <Typography
-                color="text.secondary"
-                sx={{ mb: 3 }}
-            >
-                Manage Raw Materials, Finished Goods and Packing Items
-            </Typography>
-
-            <Paper sx={{ p: 2 }}>
-
-                <Box
-
-                    display="flex"
-
-                    justifyContent="space-between"
-
-                    alignItems="center"
-
-                    mb={2}
-
+                <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    gutterBottom
                 >
+                    Item Master
+                </Typography>
 
-                    <TextField
+                <Typography
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                >
+                    Manage Raw Materials, Finished Goods and Packing Items
+                </Typography>
 
-                        label="Search Item"
+                <Paper sx={{ p: 2 }}>
 
-                        size="small"
-
-                        value={search}
-
-                        onChange={(e) =>
-                            setSearch(e.target.value)
-                        }
-
-                        sx={{ width: 350 }}
-
-                    />
-
-                    <Button
-
-                        variant="contained"
-
-                        startIcon={<AddIcon />}
-
-                        onClick={() => {
-
-                            setSelectedItem(null);
-
-                            setOpen(true);
-
-                        }}
-
+                    <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={2}
                     >
 
-                        Add Item
-
-                    </Button>
-
-                </Box>
-
-                <DataGrid
-
-                    rows={filteredItems}
-
-                    columns={columns}
-
-                    getRowId={(row) => row.item_id}
-
-                    autoHeight
-
-                    loading={loading}
-
-                    pageSizeOptions={[10, 20, 50]}
-
-                    initialState={{
-
-                        pagination: {
-
-                            paginationModel: {
-
-                                pageSize: 10
-
+                        <TextField
+                            label="Search Item"
+                            size="small"
+                            value={search}
+                            onChange={(e) =>
+                                setSearch(e.target.value)
                             }
+                            sx={{ width: 350 }}
+                        />
 
-                        }
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => {
+
+                                setSelectedItem(null);
+
+                                setOpen(true);
+
+                            }}
+                        >
+                            Add Item
+                        </Button>
+
+                    </Box>
+
+                    <DataGrid
+                        rows={filteredItems}
+                        columns={columns}
+                        getRowId={(row) => row.item_id}
+                        autoHeight
+                        loading={loading}
+                        pageSizeOptions={[10, 20, 50]}
+                        initialState={{
+                            pagination: {
+                                paginationModel: {
+                                    pageSize: 10
+                                }
+                            }
+                        }}
+                    />
+
+                </Paper>
+
+                <ItemForm
+                    open={open}
+                    item={selectedItem}
+                    onClose={() => {
+
+                        setOpen(false);
+
+                        loadItems();
 
                     }}
-
                 />
 
-            </Paper>
+            </Box>
 
-            <ItemForm
-
-                open={open}
-
-                item={selectedItem}
-
-                onClose={() => {
-
-                    setOpen(false);
-
-                    loadItems();
-
-                }}
-
-            />
-
-        </Box>
+        </>
 
     );
 

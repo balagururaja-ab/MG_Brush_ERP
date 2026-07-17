@@ -80,6 +80,14 @@ export default function AppHeader() {
                 <Button
                     color="inherit"
                     component={Link}
+                    to="/orders"
+                >
+                    Orders
+                </Button>
+
+                <Button
+                    color="inherit"
+                    component={Link}
                     to="/sales"
                 >
                     Sales

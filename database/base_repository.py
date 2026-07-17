@@ -356,42 +356,6 @@ class BaseRepository:
 
         return result["total"]
     
-    def find_all(
-        self,
-        table: str,
-        conditions: dict | None = None,
-        order_by: str | None = None
-    ) -> list[dict]:
-
-        sql = f"""
-            SELECT *
-            FROM {table}
-        """
-
-        params = ()
-
-        if conditions:
-
-            where_clause = " AND ".join(
-                f"{column}=%s"
-                for column in conditions.keys()
-            )
-
-            sql += f" WHERE {where_clause}"
-
-            params = tuple(
-                conditions.values()
-            )
-
-        if order_by:
-
-            sql += f" ORDER BY {order_by}"
-
-        return self.fetch_all(
-            sql,
-            params
-        )
-    
     def upsert(
         self,
         table: str,
@@ -469,43 +433,41 @@ class BaseRepository:
         prefix: str,
         digits: int = 6
     ) -> str:
-        """
-        Generates the next sequential document number.
 
-        Example:
-            PUR000001
-            SAL000001
-            PRD000001
-        """
-
-        query = sql.SQL(
-            """
+        query = f"""
             SELECT {number_column}
+
             FROM {table}
+
             ORDER BY {id_column} DESC
+
             LIMIT 1
-            """
-        ).format(
-            number_column=sql.Identifier(number_column),
-            table=sql.SQL(table),
-            id_column=sql.Identifier(id_column)
-        )
+        """
 
         row = self.fetch_one(query)
 
         if row is None:
+
             return f"{prefix}{1:0{digits}d}"
 
         last_number = row[number_column]
 
         match = re.search(
+
             rf"^{prefix}(\d+)$",
-            last_number
+
+            str(last_number)
+
         )
 
         if match is None:
+
             return f"{prefix}{1:0{digits}d}"
 
-        next_number = int(match.group(1)) + 1
+        next_number = int(
+
+            match.group(1)
+
+        ) + 1
 
         return f"{prefix}{next_number:0{digits}d}"

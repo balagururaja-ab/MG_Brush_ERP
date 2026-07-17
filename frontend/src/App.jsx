@@ -18,6 +18,9 @@ import StockLedger from "./pages/Stock/StockLedger";
 import ItemLedger from "./pages/Stock/ItemLedger";
 import OpeningStock from "./pages/Stock/OpeningStock";
 import LowStock from "./pages/Stock/LowStock";
+import OrderList from "./pages/Order/OrderList";
+import OrderEntry from "./pages/Order/OrderEntry";
+import OrderView from "./pages/Order/OrderView";
 
 function App() {
     return (
@@ -78,6 +81,26 @@ function App() {
                 <Route
                     path="/stock/low-stock"
                     element={<LowStock />}
+                />
+
+                <Route
+                    path="/orders"
+                    element={<OrderList />}
+                />
+
+                <Route
+                    path="/orders/new"
+                    element={<OrderEntry />}
+                />
+
+                <Route
+                    path="/orders/:id"
+                    element={<OrderView />}
+                />
+
+                <Route
+                    path="/orders/edit/:id"
+                    element={<OrderEntry />}
                 />
             </Routes>
         </>

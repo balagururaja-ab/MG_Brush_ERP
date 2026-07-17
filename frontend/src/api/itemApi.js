@@ -24,3 +24,12 @@ export const deleteItem = async (id) => {
     const response = await apiClient.delete(`/items/${id}`);
     return response.data;
 };
+
+export const getCategories = () =>
+    api.get("/item-categories");
+
+export const getUnits = () =>
+    api.get("/units");
+
+export const getTaxes = () =>
+    api.get("/taxes");

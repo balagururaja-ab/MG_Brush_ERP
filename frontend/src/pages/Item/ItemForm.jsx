@@ -8,12 +8,18 @@ import {
     Grid,
     TextField,
     Button,
-    MenuItem
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Select,
 } from "@mui/material";
 
 import {
     createItem,
-    updateItem
+    updateItem,
+    getCategories,
+    getUnits,
+    getTaxes
 } from "../../api/itemApi";
 
 const emptyItem = {
@@ -52,7 +58,7 @@ const emptyItem = {
 
     reorder_level: 0,
 
-    weight_per_piece: "",
+    weight_per_piece: null,
 
     barcode: "",
 
@@ -76,7 +82,42 @@ export default function ItemForm({
 
     const [loading, setLoading] = useState(false);
 
+    const [categories, setCategories] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [taxes, setTaxes] = useState([]);
+
+    const loadCategories = async () => {
+        try {
+            const res = await getCategories();
+            setCategories(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const loadUnits = async () => {
+        try {
+            const res = await getUnits();
+            setUnits(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const loadTaxes = async () => {
+        try {
+            const res = await getTaxes();
+            setTaxes(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
+
+        loadCategories();
+        loadUnits();
+        loadTaxes();
 
         if (item) {
 
@@ -114,21 +155,70 @@ export default function ItemForm({
 
         try {
 
+            const payload = {
+
+                ...form,
+
+                category_id:
+                    form.category_id === ""
+                        ? null
+                        : Number(form.category_id),
+
+                unit_id:
+                    form.unit_id === ""
+                        ? null
+                        : Number(form.unit_id),
+
+                tax_id:
+                    form.tax_id === ""
+                        ? null
+                        : Number(form.tax_id),
+
+                purchase_rate:
+                    form.purchase_rate === ""
+                        ? 0
+                        : Number(form.purchase_rate),
+
+                selling_rate:
+                    form.selling_rate === ""
+                        ? 0
+                        : Number(form.selling_rate),
+
+                opening_stock:
+                    form.opening_stock === ""
+                        ? 0
+                        : Number(form.opening_stock),
+
+                minimum_stock:
+                    form.minimum_stock === ""
+                        ? null
+                        : Number(form.minimum_stock),
+
+                maximum_stock:
+                    form.maximum_stock === ""
+                        ? null
+                        : Number(form.maximum_stock),
+
+                reorder_level:
+                    form.reorder_level === ""
+                        ? null
+                        : Number(form.reorder_level),
+
+                weight_per_piece:
+                    form.weight_per_piece === ""
+                        ? null
+                        : Number(form.weight_per_piece)
+
+            };
+
             if (item) {
 
-                await updateItem(
-
-                    item.item_id,
-
-                    form
-
-                );
+                await updateItem(item.item_id, payload);
 
             }
-
             else {
 
-                await createItem(form);
+                await createItem(payload);
 
             }
 
@@ -232,61 +322,70 @@ export default function ItemForm({
 
                     <Grid item xs={4}>
 
-                        <TextField
+                        <FormControl fullWidth>
+                            <InputLabel>Category</InputLabel>
 
-                            fullWidth
-
-                            name="category_id"
-
-                            label="Category Id"
-
-                            type="number"
-
-                            value={form.category_id}
-
-                            onChange={handleChange}
-
-                        />
-
-                    </Grid>
-
-                    <Grid item xs={4}>
-
-                        <TextField
-
-                            fullWidth
-
-                            name="unit_id"
-
-                            label="Unit Id"
-
-                            type="number"
-
-                            value={form.unit_id}
-
-                            onChange={handleChange}
-
-                        />
+                            <Select
+                                name="category_id"
+                                value={form.category_id}
+                                onChange={handleChange}
+                            >
+                                {categories.map((c) => (
+                                    <MenuItem
+                                        key={c.category_id}
+                                        value={c.category_id}
+                                    >
+                                        {c.category_name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
                     </Grid>
 
                     <Grid item xs={4}>
 
-                        <TextField
+                        <FormControl fullWidth>
+                            <InputLabel>Unit</InputLabel>
 
-                            fullWidth
+                            <Select
+                                name="unit_id"
+                                value={form.unit_id}
+                                onChange={handleChange}
+                            >
+                                {units.map((u) => (
+                                    <MenuItem
+                                        key={u.unit_id}
+                                        value={u.unit_id}
+                                    >
+                                        {u.unit_name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
-                            name="tax_id"
+                    </Grid>
 
-                            label="Tax Id"
+                    <Grid item xs={4}>
 
-                            type="number"
+                        <FormControl fullWidth>
+                            <InputLabel>Tax</InputLabel>
 
-                            value={form.tax_id}
-
-                            onChange={handleChange}
-
-                        />
+                            <Select
+                                name="tax_id"
+                                value={form.tax_id}
+                                onChange={handleChange}
+                            >
+                                {taxes.map((t) => (
+                                    <MenuItem
+                                        key={t.tax_id}
+                                        value={t.tax_id}
+                                    >
+                                        {t.tax_name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
 
                     </Grid>
 

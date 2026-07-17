@@ -35,7 +35,12 @@ export default function Dashboard() {
 
         {
             title: "Purchase",
-            route: "/purchase"
+            route: "/purchases"
+        },
+
+        {
+            title: "Orders",
+            route: "/orders"
         },
 
         {
