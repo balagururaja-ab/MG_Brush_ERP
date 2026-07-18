@@ -5,7 +5,8 @@ import {
     Button,
     Paper,
     TextField,
-    Typography
+    Typography,
+    Chip
 } from "@mui/material";
 
 import { DataGrid } from "@mui/x-data-grid";
@@ -18,7 +19,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import {
     getItems,
-    deleteItem
+    deactivateItem,
+    activateItem
 } from "../../api/itemApi";
 
 import ItemForm from "./ItemForm";
@@ -81,9 +83,9 @@ export default function ItemList() {
     // Delete Item
     //----------------------------------------------------------
 
-    const handleDelete = async (itemId) => {
+    const handleDeactivate = async (itemId) => {
 
-        if (!window.confirm("Delete selected item?")) {
+        if (!window.confirm("Deactivate this item?")) {
 
             return;
 
@@ -91,7 +93,7 @@ export default function ItemList() {
 
         try {
 
-            await deleteItem(itemId);
+            await deactivateItem(itemId);
 
             loadItems();
 
@@ -101,6 +103,28 @@ export default function ItemList() {
             console.error(err);
 
             alert("Unable to delete item.");
+
+        }
+
+    };
+
+    const handleActivate = async (itemId) => {
+
+        if (!window.confirm("Activate selected item?")) {
+            return;
+        }
+
+        try {
+
+            await activateItem(itemId);
+
+            loadItems();
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("Unable to activate item.");
 
         }
 
@@ -137,11 +161,19 @@ export default function ItemList() {
         },
 
         {
-            field: "item_type",
-            headerName: "Type",
-            width: 170
+            field: "is_active",
+            headerName: "Status",
+            width: 120,
+            sortable: true,
+            renderCell: (params) => (
+                <Chip
+                    label={params.row.is_active ? "Active" : "Inactive"}
+                    color={params.row.is_active ? "success" : "default"}
+                    size="small"
+                />
+            )
         },
-
+        
         {
             field: "purchase_rate",
             headerName: "Purchase",
@@ -193,23 +225,23 @@ export default function ItemList() {
 
                     </Button>
 
-                    <Button
-
-                        color="error"
-
-                        size="small"
-
-                        startIcon={<DeleteIcon />}
-
-                        onClick={() =>
-                            handleDelete(params.row.item_id)
-                        }
-
-                    >
-
-                        Delete
-
-                    </Button>
+                    {params.row.is_active ? (
+                        <Button
+                            color="error"
+                            size="small"
+                            onClick={() => handleDeactivate(params.row.item_id)}
+                        >
+                            Deactivate
+                        </Button>
+                    ) : (
+                        <Button
+                            color="success"
+                            size="small"
+                            onClick={() => handleActivate(params.row.item_id)}
+                        >
+                            Activate
+                        </Button>
+                    )}
 
                 </>
 

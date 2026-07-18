@@ -20,3 +20,12 @@ def get_units():
 @router.get("/taxes")
 def get_taxes():
     return service.get_taxes()
+
+@router.get("/brands")
+def get_brands():
+    return service.get_brands()
+
+
+@router.get("/brush-sizes")
+def get_brush_sizes():
+    return service.get_brush_sizes()

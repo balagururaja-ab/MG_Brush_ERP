@@ -24,7 +24,7 @@ class ItemRepository:
 
                     FROM items
 
-                    WHERE is_active = TRUE
+                    --WHERE is_active = TRUE
 
                     ORDER BY item_name
 
@@ -60,7 +60,7 @@ class ItemRepository:
 
                     WHERE item_id=%s
 
-                    AND is_active=TRUE
+                    --AND is_active=TRUE
 
                 """, (item_id,))
 
@@ -126,7 +126,6 @@ class ItemRepository:
                 category_id,
                 unit_id,
                 tax_id,
-                item_type,
                 brush_size,
                 bristle_type,
                 handle_type,
@@ -141,7 +140,8 @@ class ItemRepository:
                 weight_per_piece,
                 barcode,
                 hsn_code,
-                description
+                description,
+                is_active
             )
 
             VALUES
@@ -151,7 +151,6 @@ class ItemRepository:
                 %(category_id)s,
                 %(unit_id)s,
                 %(tax_id)s,
-                %(item_type)s,
                 %(brush_size)s,
                 %(bristle_type)s,
                 %(handle_type)s,
@@ -166,7 +165,8 @@ class ItemRepository:
                 %(weight_per_piece)s,
                 %(barcode)s,
                 %(hsn_code)s,
-                %(description)s
+                %(description)s,
+                %(is_active)s
             )
 
             RETURNING *
@@ -200,7 +200,6 @@ class ItemRepository:
                         category_id=%(category_id)s,
                         unit_id=%(unit_id)s,
                         tax_id=%(tax_id)s,
-                        item_type=%(item_type)s,
                         brush_size=%(brush_size)s,
                         bristle_type=%(bristle_type)s,
                         handle_type=%(handle_type)s,
@@ -216,6 +215,7 @@ class ItemRepository:
                         barcode=%(barcode)s,
                         hsn_code=%(hsn_code)s,
                         description=%(description)s,
+                        is_active = %(is_active)s,
                         updated_at=CURRENT_TIMESTAMP
                     WHERE item_id=%(item_id)s
                     RETURNING *
@@ -314,4 +314,24 @@ class ItemRepository:
             conn.rollback()
             print("GET BY CODE EXCEPT ID ERROR:", ex)
 
+            raise
+
+    def activate(self, item_id: int):
+
+        conn = db.connect()
+
+        try:
+            with conn.cursor() as cur:
+
+                cur.execute("""
+                    UPDATE items
+                    SET is_active = TRUE,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE item_id = %s
+                """, (item_id,))
+
+            conn.commit()
+
+        except Exception:
+            conn.rollback()
             raise

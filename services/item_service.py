@@ -85,3 +85,6 @@ class ItemService:
             )
 
         self.repo.delete(item_id)
+
+    def activate(self, item_id: int):
+        return self.repo.activate(item_id)

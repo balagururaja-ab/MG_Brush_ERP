@@ -14,8 +14,9 @@ class ItemBase(BaseModel):
 
     tax_id: Optional[int] = None
 
-    item_type: Optional[str] = None
-    brush_size: Optional[str] = None
+    brand_id: Optional[int] = None
+
+    brush_size_id: Optional[int] = None
 
     bristle_type: Optional[str] = None
     handle_type: Optional[str] = None

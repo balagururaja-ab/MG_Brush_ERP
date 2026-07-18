@@ -20,11 +20,25 @@ export const updateItem = async (id, item) => {
     return response.data;
 };
 
-export const deleteItem = async (id) => {
+export const deactivateItem = async (id) => {
     const response = await apiClient.delete(`/items/${id}`);
     return response.data;
 };
 
+export const activateItem = async (id) => {
+    const response = await apiClient.patch(`/items/${id}/activate`);
+    return response.data;
+};
+
+export const getBrands = async () => {
+    const response = await apiClient.get("/masters/brands");
+    return response.data;
+};
+
+export const getBrushSizes = async () => {
+    const response = await apiClient.get("/masters/brush-sizes");
+    return response.data;
+};
 
 // -------------------------------
 // Master Dropdown APIs

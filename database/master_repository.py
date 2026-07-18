@@ -52,3 +52,32 @@ class MasterRepository(BaseRepository):
         """
 
         return self.fetch_all(sql)
+    
+    def get_brands(self):
+
+        sql = """
+                SELECT
+                    brand_id,
+                    brand_code,
+                    brand_name
+                FROM brand_master
+                WHERE is_active = TRUE
+                ORDER BY brand_name
+            """
+
+        return self.fetch_all(sql)
+
+
+    def get_brush_sizes(self):
+
+        sql = """
+                SELECT
+                    brush_size_id,
+                    size_code,
+                    size_name
+                FROM brush_size_master
+                WHERE is_active = TRUE
+                ORDER BY size_mm
+            """
+
+        return self.fetch_all(sql)

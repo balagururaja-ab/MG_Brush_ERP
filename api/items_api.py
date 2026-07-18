@@ -108,3 +108,12 @@ def delete_item(item_id: int):
             status_code=404,
             detail=str(ex)
         )
+    
+@router.patch("/{item_id}/activate")
+def activate_item(item_id: int):
+
+    service.activate(item_id)
+
+    return {
+        "message": "Item activated successfully."
+    }

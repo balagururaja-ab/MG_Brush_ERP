@@ -40,8 +40,7 @@ class Item(Base):
         ForeignKey("mgbrush.tax_master.tax_id")
     )
 
-    item_type = Column(String(30))
-
+    
     brush_size = Column(String(20))
     bristle_type = Column(String(100))
     handle_type = Column(String(100))

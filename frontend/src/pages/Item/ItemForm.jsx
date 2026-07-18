@@ -12,6 +12,7 @@ import {
     FormControl,
     InputLabel,
     Select,
+    FormControlLabel, Switch
 } from "@mui/material";
 
 import {
@@ -19,7 +20,9 @@ import {
     updateItem,
     getCategories,
     getUnits,
-    getTaxes
+    getTaxes,
+    getBrands,
+    getBrushSizes
 } from "../../api/itemApi";
 
 const emptyItem = {
@@ -34,9 +37,9 @@ const emptyItem = {
 
     tax_id: "",
 
-    item_type: "RAW_MATERIAL",
-
-    brush_size: "",
+    // NEW
+    brand_id: "",
+    brush_size_id: "",
 
     bristle_type: "",
 
@@ -64,7 +67,8 @@ const emptyItem = {
 
     hsn_code: "",
 
-    description: ""
+    description: "",
+    is_active: true
 
 };
 
@@ -83,8 +87,14 @@ export default function ItemForm({
     const [loading, setLoading] = useState(false);
 
     const [categories, setCategories] = useState([]);
+
     const [units, setUnits] = useState([]);
+
     const [taxes, setTaxes] = useState([]);
+
+    const [brands, setBrands] = useState([]);
+
+    const [brushSizes, setBrushSizes] = useState([]);
 
     const loadCategories = async () => {
         try {
@@ -113,11 +123,36 @@ export default function ItemForm({
         }
     };
 
+    const loadBrands = async () => {
+        try {
+            const data = await getBrands();
+            setBrands(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const loadBrushSizes = async () => {
+        try {
+            const data = await getBrushSizes();
+            setBrushSizes(data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    
     useEffect(() => {
 
         loadCategories();
+        
         loadUnits();
+        
         loadTaxes();
+        
+        loadBrands();
+
+        loadBrushSizes();
 
         if (item) {
 
@@ -173,6 +208,17 @@ export default function ItemForm({
                     form.tax_id === ""
                         ? null
                         : Number(form.tax_id),
+
+                // NEW
+                brand_id:
+                    form.brand_id === ""
+                        ? null
+                        : Number(form.brand_id),
+
+                brush_size_id:
+                    form.brush_size_id === ""
+                        ? null
+                        : Number(form.brush_size_id),
 
                 purchase_rate:
                     form.purchase_rate === ""
@@ -390,66 +436,70 @@ export default function ItemForm({
                     </Grid>
 
                     <Grid item xs={4}>
+                        <FormControl fullWidth>
 
-                        <TextField
+                            <InputLabel>
 
-                            fullWidth
+                                Brand
 
-                            select
+                            </InputLabel>
 
-                            name="item_type"
+                            <Select
+                                name="brand_id"
+                                value={form.brand_id}
+                                onChange={handleChange}
+                            >
 
-                            label="Item Type"
+                                {brands.map(brand => (
 
-                            value={form.item_type}
+                                    <MenuItem
+                                        key={brand.brand_id}
+                                        value={brand.brand_id}
+                                    >
 
-                            onChange={handleChange}
+                                        {brand.brand_name}
 
-                        >
+                                    </MenuItem>
 
-                            <MenuItem value="RAW_MATERIAL">
+                                ))}
 
-                                RAW MATERIAL
+                            </Select>
 
-                            </MenuItem>
-
-                            <MenuItem value="FINISHED_GOOD">
-
-                                FINISHED GOOD
-
-                            </MenuItem>
-
-                            <MenuItem value="SEMI_FINISHED">
-
-                                SEMI FINISHED
-
-                            </MenuItem>
-
-                            <MenuItem value="PACKING">
-
-                                PACKING
-
-                            </MenuItem>
-
-                        </TextField>
-
-                    </Grid>
+                        </FormControl>
+                        </Grid>
 
                     <Grid item xs={4}>
 
-                        <TextField
+                        <FormControl fullWidth>
 
-                            fullWidth
+                            <InputLabel>
 
-                            name="brush_size"
+                                Brush Size
 
-                            label="Brush Size"
+                            </InputLabel>
 
-                            value={form.brush_size}
+                            <Select
+                                name="brush_size_id"
+                                value={form.brush_size_id}
+                                onChange={handleChange}
+                            >
 
-                            onChange={handleChange}
+                                {brushSizes.map(size => (
 
-                        />
+                                    <MenuItem
+                                        key={size.brush_size_id}
+                                        value={size.brush_size_id}
+                                    >
+
+                                        {size.size_name}
+
+                                    </MenuItem>
+
+                                ))}
+
+                            </Select>
+
+                        </FormControl>
 
                     </Grid>
 
@@ -551,6 +601,22 @@ export default function ItemForm({
 
                         />
 
+                    </Grid>
+                    <Grid item xs={6}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={form.is_active}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            is_active: e.target.checked,
+                                        })
+                                    }
+                                />
+                            }
+                            label="Active"
+                        />
                     </Grid>
 
                 </Grid>
