@@ -88,8 +88,8 @@ export default function ItemForm({
 
     const loadCategories = async () => {
         try {
-            const res = await getCategories();
-            setCategories(res.data);
+            const data = await getCategories();
+            setCategories(data);
         } catch (err) {
             console.error(err);
         }
@@ -97,8 +97,8 @@ export default function ItemForm({
 
     const loadUnits = async () => {
         try {
-            const res = await getUnits();
-            setUnits(res.data);
+            const data = await getUnits();
+            setUnits(data);
         } catch (err) {
             console.error(err);
         }
@@ -106,8 +106,8 @@ export default function ItemForm({
 
     const loadTaxes = async () => {
         try {
-            const res = await getTaxes();
-            setTaxes(res.data);
+            const data = await getTaxes();
+            setTaxes(data);
         } catch (err) {
             console.error(err);
         }

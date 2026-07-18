@@ -25,11 +25,22 @@ export const deleteItem = async (id) => {
     return response.data;
 };
 
-export const getCategories = () =>
-    api.get("/item-categories");
 
-export const getUnits = () =>
-    api.get("/units");
+// -------------------------------
+// Master Dropdown APIs
+// -------------------------------
 
-export const getTaxes = () =>
-    api.get("/taxes");
+export const getCategories = async () => {
+    const response = await apiClient.get("/masters/item-categories");
+    return response.data;
+};
+
+export const getUnits = async () => {
+    const response = await apiClient.get("/masters/units");
+    return response.data;
+};
+
+export const getTaxes = async () => {
+    const response = await apiClient.get("/masters/taxes");
+    return response.data;
+};

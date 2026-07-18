@@ -9,6 +9,7 @@ from api.customer_api import router as customer_router
 from api.sales_api import router as sales_router
 from api.stock_api import router as stock_router
 from api.order_api import router as order_router
+from api.master_api import router as master_router
 
 app = FastAPI(title="MG Brush ERP API")
 
@@ -73,4 +74,10 @@ app.include_router(
     order_router,
     prefix="/api/orders",
     tags=["Orders"]
+)
+
+app.include_router(
+    master_router,
+    prefix="/api/masters",
+    tags=["Masters"]
 )
