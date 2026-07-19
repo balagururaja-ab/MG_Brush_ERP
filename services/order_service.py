@@ -56,7 +56,7 @@ class OrderService:
             )
 
     # ---------------------------------------------------------
-    # Validate Items
+    # Validate Order Items
     # ---------------------------------------------------------
 
     def validate_items(
@@ -64,48 +64,64 @@ class OrderService:
         items: list[dict]
     ):
 
-        item_ids = []
-
         if len(items) == 0:
 
             raise ValueError(
                 "Order must contain at least one item."
             )
 
+        combinations = []
+
         for item in items:
 
-            item_master = self.repo.get_item(
-                item["item_id"]
+            brand = self.repo.get_brand(
+                item["brand_id"]
             )
 
-            if item_master is None:
+            if brand is None:
 
                 raise ValueError(
-
-                    f"Item {item['item_id']} does not exist."
-
+                    "Invalid Brand."
                 )
 
-            if item["item_id"] in item_ids:
-
-                raise ValueError(
-                    "Duplicate Item found."
-                )
-
-            item_ids.append(
-                item["item_id"]
+            brush_size = self.repo.get_brush_size(
+                item["brush_size_id"]
             )
+
+            if brush_size is None:
+
+                raise ValueError(
+                    "Invalid Brush Size."
+                )
+
+            key = (
+                item["brand_id"],
+                item["brush_size_id"]
+            )
+
+            if key in combinations:
+
+                raise ValueError(
+                    "Duplicate Brand & Brush Size found."
+                )
+
+            combinations.append(key)
 
             qty = float(item["quantity"])
 
             if qty <= 0:
-                raise ValueError("Quantity must be greater than zero.")
 
-                
+                raise ValueError(
+                    "Quantity must be greater than zero."
+                )
+
             rate = float(item["rate"])
 
             if rate <= 0:
-                raise ValueError("Rate must be greater than zero.")
+
+                raise ValueError(
+                    "Rate must be greater than zero."
+                )
 
     # ---------------------------------------------------------
     # Calculate Totals
@@ -144,7 +160,7 @@ class OrderService:
 
         }
     
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
     # Create Order
     # ---------------------------------------------------------
 
@@ -164,12 +180,22 @@ class OrderService:
 
         for item in items:
 
-            item["item_id"] = int(item["item_id"])
+            item["brand_id"] = int(
+                item["brand_id"]
+            )
 
-            item["quantity"] = float(item["quantity"])
+            item["brush_size_id"] = int(
+                item["brush_size_id"]
+            )
 
-            item["rate"] = float(item["rate"])
-        
+            item["quantity"] = float(
+                item["quantity"]
+            )
+
+            item["rate"] = float(
+                item["rate"]
+            )
+
         self.validate_items(
             items
         )
@@ -183,19 +209,14 @@ class OrderService:
 
         try:
 
-            # -----------------------------------------
-            # Create Order Header
-            # -----------------------------------------
-
             order_id = self.repo.create_order(
                 order
             )
 
-            # -----------------------------------------
-            # Create Order Items
-            # -----------------------------------------
-
-            for line_no, item in enumerate(items, start=1):
+            for line_no, item in enumerate(
+                items,
+                start=1
+            ):
 
                 item["order_id"] = order_id
 
@@ -203,15 +224,17 @@ class OrderService:
 
                 item["amount"] = round(
 
-                    float(item["quantity"]) *
+                    item["quantity"] *
 
-                    float(item["rate"]),
+                    item["rate"],
 
                     2
 
                 )
 
-                self.repo.create_order_item(item)
+                self.repo.create_order_item(
+                    item
+                )
 
             self.repo.commit()
 
@@ -249,6 +272,24 @@ class OrderService:
             order["customer_id"]
         )
 
+        for item in items:
+
+            item["brand_id"] = int(
+                item["brand_id"]
+            )
+
+            item["brush_size_id"] = int(
+                item["brush_size_id"]
+            )
+
+            item["quantity"] = float(
+                item["quantity"]
+            )
+
+            item["rate"] = float(
+                item["rate"]
+            )
+
         self.validate_items(
             items
         )
@@ -265,10 +306,6 @@ class OrderService:
 
         try:
 
-            # -----------------------------------------
-            # Update Header
-            # -----------------------------------------
-
             self.repo.update_order(
 
                 order_id,
@@ -276,10 +313,6 @@ class OrderService:
                 order
 
             )
-
-            # -----------------------------------------
-            # Delete Existing Items
-            # -----------------------------------------
 
             old_items = self.repo.get_order_items(
                 order_id
@@ -293,10 +326,6 @@ class OrderService:
 
                 )
 
-            # -----------------------------------------
-            # Insert New Items
-            # -----------------------------------------
-
             for line_no, item in enumerate(
 
                 items,
@@ -309,7 +338,15 @@ class OrderService:
 
                 item["line_no"] = line_no
 
-                item["amount"] = round( float(item["quantity"]) * float(item["rate"]),2)
+                item["amount"] = round(
+
+                    item["quantity"] *
+
+                    item["rate"],
+
+                    2
+
+                )
 
                 self.repo.create_order_item(
                     item
@@ -325,7 +362,7 @@ class OrderService:
 
             raise
 
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
     # Delete Order
     # ---------------------------------------------------------
 

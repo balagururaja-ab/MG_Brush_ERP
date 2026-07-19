@@ -33,21 +33,59 @@ class OrderRepository(BaseRepository):
     # Item
     # ---------------------------------------------------------
 
-    def get_item(
+    # def get_item(
+    #     self,
+    #     item_id: int
+    # ):
+
+    #     return self.find_one(
+
+    #         Tables.ITEMS,
+
+    #         {
+    #             "item_id": item_id
+    #         }
+
+    #     )
+
+    # ---------------------------------------------------------
+    # Brand
+    # ---------------------------------------------------------
+
+    def get_brand(
         self,
-        item_id: int
+        brand_id: int
     ):
 
         return self.find_one(
 
-            Tables.ITEMS,
+            Tables.BRAND_MASTER,
 
             {
-                "item_id": item_id
+                "brand_id": brand_id
             }
 
         )
 
+
+    # ---------------------------------------------------------
+    # Brush Size
+    # ---------------------------------------------------------
+
+    def get_brush_size(
+        self,
+        brush_size_id: int
+    ):
+
+        return self.find_one(
+
+            Tables.BRUSH_SIZE_MASTER,
+
+            {
+                "brush_size_id": brush_size_id
+            }
+
+        )
     # ---------------------------------------------------------
     # Create Order Header
     # ---------------------------------------------------------
@@ -155,13 +193,26 @@ class OrderRepository(BaseRepository):
         order_id: int
     ):
 
-        return self.find_one(
+        sql = f"""
+            SELECT
 
-            Tables.ORDER_HEADER,
+                oh.*,
 
-            {
-                "order_id": order_id
-            }
+                c.customer_name
+
+            FROM {Tables.ORDER_HEADER} oh
+
+            INNER JOIN {Tables.CUSTOMERS} c
+                    ON oh.customer_id = c.customer_id
+
+            WHERE oh.order_id = %s
+        """
+
+        return self.fetch_one(
+
+            sql,
+
+            [order_id]
 
         )
 
@@ -177,33 +228,36 @@ class OrderRepository(BaseRepository):
         sql = f"""
             SELECT
 
-                od.*,
+                od.order_detail_id,
+                od.order_id,
+                od.line_no,
 
-                i.item_code,
-                i.item_name,
-                u.unit_name
+                od.brand_id,
+                b.brand_name,
+
+                od.brush_size_id,
+                bs.size_name,
+
+                od.quantity,
+                od.rate,
+                od.amount
 
             FROM {Tables.ORDER_DETAILS} od
 
-            INNER JOIN {Tables.ITEMS} i
+            INNER JOIN {Tables.BRAND_MASTER} b
+                    ON od.brand_id = b.brand_id
 
-                    ON od.item_id=i.item_id
+            INNER JOIN {Tables.BRUSH_SIZE_MASTER} bs
+                    ON od.brush_size_id = bs.brush_size_id
 
-            LEFT JOIN {Tables.UNIT_MASTER} u
-
-                   ON i.unit_id=u.unit_id
-
-            WHERE od.order_id=%s
+            WHERE od.order_id = %s
 
             ORDER BY od.line_no
         """
 
         return self.fetch_all(
-
             sql,
-
             [order_id]
-
         )
 
     # ---------------------------------------------------------

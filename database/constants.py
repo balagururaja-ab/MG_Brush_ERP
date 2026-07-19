@@ -71,3 +71,11 @@ class Tables:
     ORDER_HEADER = "mgbrush.order_header"
 
     ORDER_DETAILS = "mgbrush.order_details"
+
+    BRAND_MASTER = "mgbrush.brand_master"
+
+    BRANDS = "mgbrush.brands"
+
+    BRUSH_SIZES = "mgbrush.brush_sizes"
+
+    BRUSH_SIZE_MASTER = "mgbrush.brush_size_master"

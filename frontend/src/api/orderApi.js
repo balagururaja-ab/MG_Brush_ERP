@@ -1,4 +1,5 @@
 import axios from "axios";
+import apiClient from "./apiClient";
 
 const API = "http://127.0.0.1:8000/api/orders";
 
@@ -111,3 +112,13 @@ export async function deleteOrder(
     return response.data;
 
 }
+
+export const getBrands = async () => {
+    const response = await apiClient.get("/masters/brands");
+    return response.data;
+};
+
+export const getBrushSizes = async () => {
+    const response = await apiClient.get("/masters/brush-sizes");
+    return response.data;
+};

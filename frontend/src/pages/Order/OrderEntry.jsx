@@ -55,9 +55,8 @@ import {
 } from "../../api/customerApi";
 
 import {
-
-    getItems
-
+    getBrands,
+    getBrushSizes
 } from "../../api/itemApi";
 
 import AppHeader from "../../components/AppHeader";
@@ -82,7 +81,9 @@ const emptyOrder = {
 
 const emptyItem = {
 
-    item_id: "",
+    brand_id: "",
+
+    brush_size_id: "",
 
     quantity: 1,
 
@@ -104,22 +105,18 @@ export default function OrderEntry() {
 
     const [customers, setCustomers] = useState([]);
 
-    const [itemsMaster, setItemsMaster] = useState([]);
+    const [brushSizes, setBrushSizes] = useState([]);
+
+    const [brands, setBrands] = useState([]);
 
     const [order, setOrder] = useState(
 
         emptyOrder
 
     );
-
+    
     const [items, setItems] = useState([
-
-        {
-
-            ...emptyItem
-
-        }
-
+        { ...emptyItem }
     ]);
 
     //---------------------------------------------------------
@@ -218,7 +215,9 @@ export default function OrderEntry() {
 
         loadCustomers();
 
-        loadItems();
+        loadBrands();
+
+        loadBrushSizes();
 
         loadOrder();
 
@@ -321,19 +320,7 @@ export default function OrderEntry() {
 
                     Number(value)
 
-            );
-
-            if (selected) {
-
-                updated[index].rate =
-
-                    Number(
-
-                        selected.selling_rate
-
-                    );
-
-            }
+            );            
 
         }
 
@@ -398,7 +385,42 @@ export default function OrderEntry() {
         0
 
     );
-        //---------------------------------------------------------
+    const loadBrands = async () => {
+
+        try {
+
+            const data = await getBrands();
+
+            setBrands(data);
+
+        }
+        catch(err){
+
+            console.error(err);
+
+        }
+
+    };
+
+
+    const loadBrushSizes = async () => {
+
+        try {
+
+            const data = await getBrushSizes();
+
+            setBrushSizes(data);
+
+        }
+        catch(err){
+
+            console.error(err);
+
+        }
+
+    };
+    
+    //---------------------------------------------------------
     // UI
     //---------------------------------------------------------
 
@@ -697,7 +719,7 @@ export default function OrderEntry() {
 
                                     xs={12}
 
-                                    md={4}
+                                    md={3}
 
                                 >
 
@@ -707,11 +729,11 @@ export default function OrderEntry() {
 
                                         fullWidth
 
-                                        label="Item"
+                                        label="Brand"
 
                                         value={
 
-                                            item.item_id
+                                            item.brand_id
 
                                         }
 
@@ -721,7 +743,7 @@ export default function OrderEntry() {
 
                                                 index,
 
-                                                "item_id",
+                                                "brand_id",
 
                                                 e.target.value
 
@@ -733,11 +755,11 @@ export default function OrderEntry() {
 
                                         {
 
-                                            itemsMaster.map(
+                                            brands.map(
 
                                                 (
 
-                                                    itm
+                                                    brand
 
                                                 ) => (
 
@@ -745,13 +767,13 @@ export default function OrderEntry() {
 
                                                         key={
 
-                                                            itm.item_id
+                                                            brand.brand_id
 
                                                         }
 
                                                         value={
 
-                                                            itm.item_id
+                                                            brand.brand_id
 
                                                         }
 
@@ -759,7 +781,7 @@ export default function OrderEntry() {
 
                                                         {
 
-                                                            itm.item_name
+                                                            brand.brand_name
 
                                                         }
 
@@ -775,13 +797,44 @@ export default function OrderEntry() {
 
                                 </Grid>
 
+                                <Grid item xs={12} md={3}>
+
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Brush Size"
+                                        value={item.brush_size_id}
+                                        onChange={(e)=>
+                                            handleItemChange(
+                                                index,
+                                                "brush_size_id",
+                                                e.target.value
+                                            )
+                                        }
+                                    >
+
+                                    {
+                                    brushSizes.map((size)=>(
+                                    <MenuItem
+                                        key={size.brush_size_id}
+                                        value={size.brush_size_id}
+                                    >
+                                        {size.size_name}
+                                    </MenuItem>
+                                    ))
+                                    }
+
+                                    </TextField>
+
+                                    </Grid>
+
                                 <Grid
 
                                     item
 
                                     xs={12}
 
-                                    md={2}
+                                    md={1}
 
                                 >
 
@@ -901,7 +954,7 @@ export default function OrderEntry() {
 
                                     xs={12}
 
-                                    md={2}
+                                    md={1}
 
                                     display="flex"
 
@@ -1062,21 +1115,17 @@ export default function OrderEntry() {
 
                             ) {
 
-                                if (
+                                if(!row.brand_id)
+                                    {
+                                        alert("Please select brand.");
+                                        return;
+                                    }
 
-                                    !row.item_id
-
-                                ) {
-
-                                    alert(
-
-                                        "Please select item."
-
-                                    );
-
-                                    return;
-
-                                }
+                                    if(!row.brush_size_id)
+                                    {
+                                        alert("Please select brush size.");
+                                        return;
+                                    }
 
                                 if (
 

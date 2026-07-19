@@ -66,30 +66,21 @@ export default function OrderView() {
 
             const data = await getOrder(id);
 
-            setOrder(data.order);
+            console.log(data);
 
-            setItems(data.items);
+            setOrder(data);
 
-        }
+            setItems(data.items || []);
 
-        catch (err) {
+        } catch (err) {
 
             console.error(err);
 
-            alert(
-
-                "Unable to load order."
-
-            );
-
-        }
-
-        finally {
+        } finally {
 
             setLoading(false);
 
         }
-
     };
 
     //---------------------------------------------------------
@@ -464,9 +455,11 @@ export default function OrderView() {
                                 <th style={{ padding: 10 }}>#</th>
 
                                 <th align="left">
+                                    Brand
+                                </th>
 
-                                    Item
-
+                                <th align="left">
+                                    Brush Size
                                 </th>
 
                                 <th>
@@ -530,13 +523,11 @@ export default function OrderView() {
                                             </td>
 
                                             <td>
+                                                {item.brand_name}
+                                            </td>
 
-                                                {
-
-                                                    item.item_name
-
-                                                }
-
+                                            <td>
+                                                {item.size_name}
                                             </td>
 
                                             <td
