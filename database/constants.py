@@ -52,6 +52,8 @@ class Tables:
 
     ITEMS = "mgbrush.items"
 
+    ITEM_CATEGORY = "mgbrush.item_category"
+
     TAX_MASTER = "mgbrush.tax_master"
 
     UNIT_MASTER = "mgbrush.unit_master"
@@ -79,3 +81,16 @@ class Tables:
     BRUSH_SIZES = "mgbrush.brush_sizes"
 
     BRUSH_SIZE_MASTER = "mgbrush.brush_size_master"
+
+    PRODUCTION_HEADER = "mgbrush.production_header"
+
+    PRODUCTION_RM_DETAILS = "mgbrush.production_rm_details"
+
+    PRODUCTION_FG_DETAILS = "mgbrush.production_fg_details"
+    
+
+
+FINISHED_GOOD_CATEGORIES = {
+    23,   # Selvi Brush
+    24    # Abhi Brush
+}
