@@ -1,4 +1,3 @@
-
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -7,28 +6,26 @@ from config import DB
 
 class Database:
 
-    def __init__(self):
-        self.connection = None
-
     def connect(self):
+        conn = psycopg2.connect(
+            host=DB.host,
+            port=DB.port,
+            database=DB.database,
+            user=DB.user,
+            password=DB.password,
+            cursor_factory=RealDictCursor,
+        )
 
-        if self.connection is None or self.connection.closed:
+        with conn.cursor() as cur:
+            cur.execute(f"SET search_path TO {DB.schema}, public;")
 
-            self.connection = psycopg2.connect(
-                host=DB.host,
-                port=DB.port,
-                database=DB.database,
-                user=DB.user,
-                password=DB.password,
-                cursor_factory=RealDictCursor
-            )
+        conn.commit()
 
-            with self.connection.cursor() as cur:
-                cur.execute(f"SET search_path TO {DB.schema}, public;")
+        return conn
 
-            self.connection.commit()
-
-        return self.connection
+    def close(self, conn):
+        if conn:
+            conn.close()
 
 
 db = Database()

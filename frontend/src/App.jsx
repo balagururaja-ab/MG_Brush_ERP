@@ -21,6 +21,9 @@ import LowStock from "./pages/Stock/LowStock";
 import OrderList from "./pages/Order/OrderList";
 import OrderEntry from "./pages/Order/OrderEntry";
 import OrderView from "./pages/Order/OrderView";
+import ProductionList from "./pages/Product/ProductionList";
+import ProductionEntry from "./pages/Product/ProductionEntry";
+import ProductionView from "./pages/Product/ProductionView";
 
 function App() {
     return (
@@ -101,6 +104,25 @@ function App() {
                 <Route
                     path="/orders/edit/:id"
                     element={<OrderEntry />}
+                />
+                <Route
+                    path="/productions"
+                    element={<ProductionList />}
+                />
+
+                <Route
+                    path="/productions/new"
+                    element={<ProductionEntry />}
+                />
+
+                <Route
+                    path="/productions/edit/:id"
+                    element={<ProductionEntry />}
+                />
+
+                <Route
+                    path="/productions/view/:id"
+                    element={<ProductionView />}
                 />
             </Routes>
         </>

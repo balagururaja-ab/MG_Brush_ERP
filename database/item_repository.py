@@ -126,7 +126,8 @@ class ItemRepository:
                 category_id,
                 unit_id,
                 tax_id,
-                brush_size,
+                brand_id,
+                brush_size_id,
                 bristle_type,
                 handle_type,
                 ferrule_type,
@@ -140,8 +141,7 @@ class ItemRepository:
                 weight_per_piece,
                 barcode,
                 hsn_code,
-                description,
-                is_active
+                description
             )
 
             VALUES
@@ -151,7 +151,8 @@ class ItemRepository:
                 %(category_id)s,
                 %(unit_id)s,
                 %(tax_id)s,
-                %(brush_size)s,
+                %(brand_id)s,
+                %(brush_size_id)s,
                 %(bristle_type)s,
                 %(handle_type)s,
                 %(ferrule_type)s,
@@ -165,8 +166,7 @@ class ItemRepository:
                 %(weight_per_piece)s,
                 %(barcode)s,
                 %(hsn_code)s,
-                %(description)s,
-                %(is_active)s
+                %(description)s
             )
 
             RETURNING *
@@ -200,7 +200,8 @@ class ItemRepository:
                         category_id=%(category_id)s,
                         unit_id=%(unit_id)s,
                         tax_id=%(tax_id)s,
-                        brush_size=%(brush_size)s,
+                        brand_id=%(brand_id)s,
+                        brush_size_id=%(brush_size_id)s,
                         bristle_type=%(bristle_type)s,
                         handle_type=%(handle_type)s,
                         ferrule_type=%(ferrule_type)s,
@@ -215,7 +216,6 @@ class ItemRepository:
                         barcode=%(barcode)s,
                         hsn_code=%(hsn_code)s,
                         description=%(description)s,
-                        is_active = %(is_active)s,
                         updated_at=CURRENT_TIMESTAMP
                     WHERE item_id=%(item_id)s
                     RETURNING *

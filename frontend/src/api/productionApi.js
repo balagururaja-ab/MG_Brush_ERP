@@ -1,13 +1,13 @@
 import apiClient from "./apiClient";
 
 //--------------------------------------
-// Get All Purchases
+// Get All Productions
 //--------------------------------------
 
-export const getPurchases = async () => {
+export const getProductions = async () => {
 
     const response = await apiClient.get(
-        "/purchases"
+        "/productions"
     );
 
     return response.data;
@@ -15,15 +15,15 @@ export const getPurchases = async () => {
 };
 
 //--------------------------------------
-// Get Purchase
+// Get Production By Id
 //--------------------------------------
 
-export const getPurchase = async (
-    purchaseId
+export const getProduction = async (
+    productionId
 ) => {
 
     const response = await apiClient.get(
-        `/purchases/${purchaseId}`
+        `/productions/${productionId}`
     );
 
     return response.data;
@@ -31,16 +31,16 @@ export const getPurchase = async (
 };
 
 //--------------------------------------
-// Create Purchase
+// Create Production
 //--------------------------------------
 
-export const createPurchase = async (
-    purchase
+export const createProduction = async (
+    production
 ) => {
 
     const response = await apiClient.post(
-        "/purchases",
-        purchase
+        "/productions",
+        production
     );
 
     return response.data;
@@ -48,17 +48,17 @@ export const createPurchase = async (
 };
 
 //--------------------------------------
-// Update Purchase
+// Update Production
 //--------------------------------------
 
-export const updatePurchase = async (
-    purchaseId,
-    purchase
+export const updateProduction = async (
+    productionId,
+    production
 ) => {
 
     const response = await apiClient.put(
-        `/purchases/${purchaseId}`,
-        purchase
+        `/productions/${productionId}`,
+        production
     );
 
     return response.data;
@@ -66,15 +66,15 @@ export const updatePurchase = async (
 };
 
 //--------------------------------------
-// Delete Purchase
+// Delete Production
 //--------------------------------------
 
-export const deletePurchase = async (
-    purchaseId
+export const deleteProduction = async (
+    productionId
 ) => {
 
     const response = await apiClient.delete(
-        `/purchases/${purchaseId}`
+        `/productions/${productionId}`
     );
 
     return response.data;

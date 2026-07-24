@@ -100,6 +100,13 @@ export default function AppHeader() {
                 >
                     Stock
                 </Button>
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/productions"
+                >
+                    Production
+                </Button>
 
             </Toolbar>
 

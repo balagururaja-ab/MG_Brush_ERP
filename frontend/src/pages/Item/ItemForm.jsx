@@ -67,8 +67,7 @@ const emptyItem = {
 
     hsn_code: "",
 
-    description: "",
-    is_active: true
+    description: ""
 
 };
 
@@ -601,23 +600,7 @@ export default function ItemForm({
 
                         />
 
-                    </Grid>
-                    <Grid item xs={6}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={form.is_active}
-                                    onChange={(e) =>
-                                        setForm({
-                                            ...form,
-                                            is_active: e.target.checked,
-                                        })
-                                    }
-                                />
-                            }
-                            label="Active"
-                        />
-                    </Grid>
+                    </Grid>                    
 
                 </Grid>
 

@@ -13,15 +13,11 @@ class SalesItem(BaseModel):
 
     item_id: int
 
-    unit_id: int
-
     quantity: Decimal
 
     rate: Decimal
 
     discount_percent: Decimal = 0
-
-    tax_id: Optional[int] = None
 
     discount_amount: Decimal = 0
 
@@ -34,7 +30,6 @@ class SalesItem(BaseModel):
     igst_amount: Decimal = 0
 
     total_amount: Decimal = 0
-
 
 # ---------------------------------------------------------
 # Sales Header

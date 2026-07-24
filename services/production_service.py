@@ -482,7 +482,7 @@ class ProductionService:
 
                 self.repo.delete_rm_item(
 
-                    row["production_rm_detail_id"]
+                    row["production_rm_id"]
 
                 )
 
@@ -500,7 +500,7 @@ class ProductionService:
 
                 self.repo.delete_fg_item(
 
-                    row["production_fg_detail_id"]
+                    row["production_fg_id"]
 
                 )
 
@@ -628,7 +628,7 @@ class ProductionService:
 
                 self.repo.delete_rm_item(
 
-                    row["production_rm_detail_id"]
+                    row["production_rm_id"]
 
                 )
 
@@ -646,7 +646,7 @@ class ProductionService:
 
                 self.repo.delete_fg_item(
 
-                    row["production_fg_detail_id"]
+                    row["production_fg_id"]
 
                 )
 
@@ -667,3 +667,42 @@ class ProductionService:
             self.repo.rollback()
 
             raise
+
+    # ---------------------------------------------------------
+    # List Productions
+    # ---------------------------------------------------------
+
+    def list_productions(self):
+
+        return self.repo.list_productions()
+
+    # ---------------------------------------------------------
+    # Get Production
+    # ---------------------------------------------------------
+
+    def get_production(
+        self,
+        production_id: int
+    ):
+
+        production = self.repo.get_production_by_id(
+            production_id
+        )
+
+        if production is None:
+
+            raise ValueError(
+                "Production not found."
+            )
+
+        production["rm_items"] = self.repo.get_rm_items(
+            production_id
+        )
+
+        production["fg_items"] = self.repo.get_fg_items(
+            production_id
+        )
+
+        return production
+
+    
