@@ -80,3 +80,38 @@ export const deleteSales = async (
     return response.data;
 
 };
+// ---------------------------------------------------------
+// Generate Invoice
+// ---------------------------------------------------------
+
+export const generateSalesInvoice = async (
+    salesId,
+    invoiceData
+) => {
+
+    const response = await apiClient.post(
+        `/sales/${salesId}/invoice`,
+        invoiceData
+    );
+
+    return response.data;
+
+};
+
+// ---------------------------------------------------------
+// Record Payment
+// ---------------------------------------------------------
+
+export const recordSalesPayment = async (
+    salesId,
+    payment
+) => {
+
+    const response = await apiClient.post(
+        `/sales/${salesId}/payment`,
+        payment
+    );
+
+    return response.data;
+
+};

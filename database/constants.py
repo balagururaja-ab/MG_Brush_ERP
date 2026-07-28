@@ -78,6 +78,10 @@ class Tables:
 
     BRANDS = "mgbrush.brands"
 
+    INVOICE = "mgbrush.invoice"
+
+    PAYMENT = "mgbrush.payment"
+
     BRUSH_SIZES = "mgbrush.brush_sizes"
 
     BRUSH_SIZE_MASTER = "mgbrush.brush_size_master"

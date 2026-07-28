@@ -6,7 +6,8 @@ import {
     Divider,
     Grid,
     Button,
-    Box
+    Box,
+    TextField
 } from "@mui/material";
 
 import {
@@ -16,7 +17,11 @@ import {
 
 import MainLayout from "../../layouts/MainLayout";
 
-import { getSale } from "../../api/salesApi";
+import {
+    getSale,
+    generateSalesInvoice,
+    recordSalesPayment
+} from "../../api/salesApi";
 
 export default function SalesView() {
 
@@ -25,6 +30,13 @@ export default function SalesView() {
     const { id } = useParams();
 
     const [sales, setSales] = useState(null);
+    const [payment, setPayment] = useState({
+        payment_date: new Date().toISOString().substring(0, 10),
+        amount: 0,
+        payment_mode: "",
+        reference_no: "",
+        remarks: ""
+    });
 
     //---------------------------------------------------------
     // Load Sales
@@ -50,6 +62,70 @@ export default function SalesView() {
             console.error(err);
 
             alert("Unable to load sales.");
+
+        }
+
+    };
+
+    const handleGenerateInvoice = async () => {
+
+        try {
+
+            await generateSalesInvoice(sales.sales_id, {
+                invoice_date: sales.invoice_date || new Date().toISOString().substring(0, 10),
+                is_gst: sales.is_gst || false,
+                gst_percent: sales.gst_percent || 0
+            });
+
+            await loadSales();
+
+            alert("Invoice generated successfully.");
+
+        }
+        catch (err) {
+
+            console.error(err);
+
+            alert(err.response?.data?.detail || "Unable to generate invoice.");
+
+        }
+
+    };
+
+    const handlePaymentChange = (e) => {
+
+        const { name, value, type } = e.target;
+
+        setPayment(prev => ({
+            ...prev,
+            [name]: type === "number" ? Number(value) : value
+        }));
+
+    };
+
+    const handleRecordPayment = async () => {
+
+        try {
+
+            if (!payment.amount || payment.amount <= 0) {
+                alert("Enter a valid payment amount.");
+                return;
+            }
+
+            await recordSalesPayment(sales.sales_id, payment);
+
+            await loadSales();
+
+            setPayment(prev => ({ ...prev, amount: 0, remarks: "", reference_no: "", payment_mode: "" }));
+
+            alert("Payment recorded successfully.");
+
+        }
+        catch (err) {
+
+            console.error(err);
+
+            alert(err.response?.data?.detail || "Unable to record payment.");
 
         }
 
@@ -249,6 +325,78 @@ export default function SalesView() {
 
                     </Grid>
 
+                    <Grid size={{ xs: 12, md: 3 }}>
+
+                        <Typography
+                            fontWeight="bold"
+                        >
+
+                            GST Applied
+
+                        </Typography>
+
+                        <Typography>
+
+                            {sales.is_gst ? "Yes" : "No"}
+
+                        </Typography>
+
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 3 }}>
+
+                        <Typography
+                            fontWeight="bold"
+                        >
+
+                            GST %
+
+                        </Typography>
+
+                        <Typography>
+
+                            {sales.gst_percent ?? 0}
+
+                        </Typography>
+
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 3 }}>
+
+                        <Typography
+                            fontWeight="bold"
+                        >
+
+                            Paid Amount
+
+                        </Typography>
+
+                        <Typography>
+
+                            ₹ {Number(sales.paid_amount || 0).toFixed(2)}
+
+                        </Typography>
+
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 3 }}>
+
+                        <Typography
+                            fontWeight="bold"
+                        >
+
+                            Pending Amount
+
+                        </Typography>
+
+                        <Typography>
+
+                            ₹ {Number(sales.pending_amount || 0).toFixed(2)}
+
+                        </Typography>
+
+                    </Grid>
+
                     <Grid size={{ xs: 12 }}>
 
                         <Typography
@@ -270,7 +418,107 @@ export default function SalesView() {
                 </Grid>
 
                 <Divider sx={{ my: 3 }} />
-                                <Typography
+
+                <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={3}
+                >
+                    <Typography
+                        variant="h6"
+                        fontWeight="bold"
+                    >
+                        Sales Items
+                    </Typography>
+
+                    <Box>
+                        <Button
+                            variant="contained"
+                            color={sales.invoice_generated ? "success" : "primary"}
+                            disabled={sales.invoice_generated}
+                            onClick={handleGenerateInvoice}
+                        >
+                            {sales.invoice_generated
+                                ? "Invoice Generated"
+                                : "Generate Invoice"}
+                        </Button>
+                    </Box>
+                </Box>
+
+                <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                >
+                    Record a payment against this sale below.
+                </Typography>
+
+                <Grid
+                    container
+                    spacing={2}
+                    sx={{ mb: 3 }}
+                >
+                    <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label="Payment Date"
+                            type="date"
+                            name="payment_date"
+                            value={payment.payment_date}
+                            onChange={handlePaymentChange}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Amount"
+                            name="amount"
+                            value={payment.amount}
+                            onChange={handlePaymentChange}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label="Payment Mode"
+                            name="payment_mode"
+                            value={payment.payment_mode}
+                            onChange={handlePaymentChange}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            label="Reference No"
+                            name="reference_no"
+                            value={payment.reference_no}
+                            onChange={handlePaymentChange}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                        <TextField
+                            fullWidth
+                            label="Remarks"
+                            name="remarks"
+                            value={payment.remarks}
+                            onChange={handlePaymentChange}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                        <Button
+                            variant="contained"
+                            onClick={handleRecordPayment}
+                            disabled={Number(sales.pending_amount || 0) <= 0}
+                        >
+                            Record Payment
+                        </Button>
+                    </Grid>
+                </Grid>
+
+                <Typography
                     variant="h6"
                     fontWeight="bold"
                     gutterBottom

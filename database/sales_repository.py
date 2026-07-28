@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from database.base_repository import BaseRepository
 from database.constants import Tables
 
@@ -13,12 +15,17 @@ class SalesRepository(BaseRepository):
         sales_id: int
     ):
 
-        return self.find_one(
-            Tables.SALES_HEADER,
-            {
-                "sales_id": sales_id
-            }
-        )
+        sql = f"""
+            SELECT
+                sh.*,
+                c.customer_name
+            FROM {Tables.SALES_HEADER} sh
+            LEFT JOIN {Tables.CUSTOMERS} c
+                ON sh.customer_id = c.customer_id
+            WHERE sh.sales_id = %s
+        """
+
+        return self.fetch_one(sql, [sales_id])
 
     # ---------------------------------------------------------
     # Get Sales Items
@@ -31,11 +38,8 @@ class SalesRepository(BaseRepository):
 
         sql = f"""
             SELECT *
-
             FROM {Tables.SALES_DETAILS}
-
             WHERE sales_id=%s
-
             ORDER BY line_no
         """
 
@@ -52,22 +56,19 @@ class SalesRepository(BaseRepository):
 
         sql = f"""
             SELECT
-
                 sh.sales_id,
                 sh.sales_no,
                 sh.sales_date,
                 sh.invoice_no,
+                sh.invoice_generated,
                 sh.grand_total,
+                sh.paid_amount,
+                sh.pending_amount,
                 sh.payment_status,
-
                 c.customer_name
-
             FROM {Tables.SALES_HEADER} sh
-
             INNER JOIN {Tables.CUSTOMERS} c
-
-                    ON sh.customer_id=c.customer_id
-
+                    ON sh.customer_id = c.customer_id
             ORDER BY sh.sales_id DESC
         """
 
@@ -99,15 +100,29 @@ class SalesRepository(BaseRepository):
     ):
 
         return self.update(
-
             Tables.SALES_HEADER,
-
             sales_header,
-
             {
                 "sales_id": sales_id
             }
+        )
 
+    # ---------------------------------------------------------
+    # Update Sales Payment / Invoice Fields
+    # ---------------------------------------------------------
+
+    def update_sales_payment(
+        self,
+        sales_id: int,
+        payment_data: dict
+    ):
+
+        return self.update(
+            Tables.SALES_HEADER,
+            payment_data,
+            {
+                "sales_id": sales_id
+            }
         )
 
     # ---------------------------------------------------------
@@ -120,13 +135,10 @@ class SalesRepository(BaseRepository):
     ):
 
         return self.delete(
-
             Tables.SALES_HEADER,
-
             {
                 "sales_id": sales_id
             }
-
         )
 
     # ---------------------------------------------------------
@@ -154,13 +166,10 @@ class SalesRepository(BaseRepository):
     ):
 
         return self.delete(
-
             Tables.SALES_DETAILS,
-
             {
                 "sales_detail_id": sales_detail_id
             }
-
         )
     
     # ---------------------------------------------------------
@@ -173,13 +182,10 @@ class SalesRepository(BaseRepository):
     ):
 
         return self.delete(
-
             Tables.SALES_DETAILS,
-
             {
                 "sales_id": sales_id
             }
-
         )
     
     # ---------------------------------------------------------
@@ -192,11 +198,52 @@ class SalesRepository(BaseRepository):
     ):
 
         return self.find_one(
-
             Tables.CUSTOMERS,
-
             {
                 "customer_id": customer_id
             }
+        )
 
+    # ---------------------------------------------------------
+    # Sales / Invoice Number Generation
+    # ---------------------------------------------------------
+
+    def generate_sales_number(
+        self,
+        sales_id: int
+    ) -> str:
+
+        year = datetime.now().year
+
+        return f"SAL-{year}-{sales_id:06d}"
+
+    def generate_invoice_number(
+        self,
+        sales_id: int
+    ) -> str:
+
+        year = datetime.now().year
+
+        return f"INV-{year}-{sales_id:06d}"
+
+    def update_sales_numbers(
+        self,
+        sales_id: int,
+        sales_no: str,
+        invoice_no: str | None = None
+    ):
+
+        update_data = {
+            "sales_no": sales_no
+        }
+
+        if invoice_no is not None:
+            update_data["invoice_no"] = invoice_no
+
+        return self.update(
+            Tables.SALES_HEADER,
+            update_data,
+            {
+                "sales_id": sales_id
+            }
         )

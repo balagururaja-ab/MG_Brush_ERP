@@ -167,6 +167,20 @@ export default function SalesList() {
         },
 
         {
+            field: "paid_amount",
+            headerName: "Paid",
+            width: 120,
+            type: "number"
+        },
+
+        {
+            field: "pending_amount",
+            headerName: "Pending",
+            width: 130,
+            type: "number"
+        },
+
+        {
             field: "grand_total",
             headerName: "Grand Total",
             width: 150,

@@ -27,7 +27,7 @@ import {
 
     createSales,
     updateSales,
-    getSales
+    getSale
 
 } from "../../api/salesApi";
 
@@ -56,6 +56,14 @@ export default function SalesEntry() {
             .toISOString()
 
             .substring(0, 10),
+
+        is_gst: false,
+
+        gst_percent: 0,
+
+        paid_amount: 0,
+
+        pending_amount: 0,
 
         payment_status: "PENDING",
 
@@ -95,6 +103,14 @@ export default function SalesEntry() {
 
                 invoice_date: data.invoice_date,
 
+                is_gst: data.is_gst,
+
+                gst_percent: data.gst_percent,
+
+                paid_amount: data.paid_amount,
+
+                pending_amount: data.pending_amount,
+
                 payment_status: data.payment_status,
 
                 remarks: data.remarks
@@ -124,7 +140,9 @@ export default function SalesEntry() {
 
             name,
 
-            value
+            value,
+
+            type
 
         } = e.target;
 
@@ -132,7 +150,12 @@ export default function SalesEntry() {
 
             ...prev,
 
-            [name]: value
+            [name]:
+                name === "is_gst"
+                    ? value === "true"
+                    : type === "number"
+                        ? Number(value)
+                        : value
 
         }));
 

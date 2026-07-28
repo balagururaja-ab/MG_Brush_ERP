@@ -93,6 +93,8 @@ export default function SalesItemGrid({
 
             {
                 item_id: "",
+                unit_id: "",
+                tax_id: "",
                 quantity: 1,
                 rate: 0,
                 discount_percent: 0,
@@ -134,6 +136,18 @@ export default function SalesItemGrid({
         updated[index][field] = value;
 
         const row = updated[index];
+
+        if (field === "item_id") {
+            const item = itemMaster.find(
+                x => x.item_id === Number(value)
+            );
+
+            if (item) {
+                row.unit_id = item.unit_id;
+                row.tax_id = item.tax_id;
+                row.rate = Number(item.selling_rate || 0);
+            }
+        }
 
         const gross =
             Number(row.quantity || 0) *

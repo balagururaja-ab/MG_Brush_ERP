@@ -132,6 +132,58 @@ export default function SalesHeader({
 
                     select
 
+                    label="GST Applicable"
+
+                    name="is_gst"
+
+                    value={sales.is_gst ? "true" : "false"}
+
+                    onChange={onChange}
+
+                >
+
+                    <MenuItem value="false">
+                        No
+                    </MenuItem>
+
+                    <MenuItem value="true">
+                        Yes
+                    </MenuItem>
+
+                </TextField>
+
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 3 }}>
+
+                <TextField
+
+                    fullWidth
+
+                    type="number"
+
+                    label="GST %"
+
+                    name="gst_percent"
+
+                    value={sales.gst_percent}
+
+                    onChange={onChange}
+
+                    inputProps={{ min: 0, step: 0.1 }}
+
+                />
+
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 3 }}>
+
+                <TextField
+
+                    fullWidth
+
+                    select
+
                     label="Customer"
 
                     name="customer_id"
@@ -166,6 +218,42 @@ export default function SalesHeader({
 
             </Grid>
                         <Grid size={{ xs: 12, md: 3 }}>
+
+                <TextField
+
+                    fullWidth
+
+                    label="Paid Amount"
+
+                    name="paid_amount"
+
+                    value={sales.paid_amount ?? 0}
+
+                    disabled
+
+                />
+
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 3 }}>
+
+                <TextField
+
+                    fullWidth
+
+                    label="Pending Amount"
+
+                    name="pending_amount"
+
+                    value={sales.pending_amount ?? 0}
+
+                    disabled
+
+                />
+
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 3 }}>
 
                 <TextField
 
