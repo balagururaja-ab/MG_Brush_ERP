@@ -205,6 +205,78 @@ class SalesRepository(BaseRepository):
         )
 
     # ---------------------------------------------------------
+    # Get Item By Brand And Brush Size
+    # ---------------------------------------------------------
+
+    def get_item_for_order_item(
+        self,
+        brand_id: int,
+        brush_size_id: int,
+        brand_name: str | None = None
+    ):
+
+        sql = f"""
+            SELECT *
+            FROM {Tables.ITEMS}
+            WHERE brand_id = %s
+              AND brush_size_id = %s
+            LIMIT 1
+        """
+
+        item = self.fetch_one(
+            sql,
+            [brand_id, brush_size_id]
+        )
+
+        if item is not None:
+            return item
+
+        if brand_name:
+            sql = f"""
+                SELECT *
+                FROM {Tables.ITEMS}
+                WHERE brush_size_id = %s
+                  AND item_name ILIKE %s
+                ORDER BY item_id
+                LIMIT 1
+            """
+
+            item = self.fetch_one(
+                sql,
+                [brush_size_id, f"%{brand_name}%"]
+            )
+
+            if item is not None:
+                return item
+
+        sql = f"""
+            SELECT *
+            FROM {Tables.ITEMS}
+            WHERE brush_size_id = %s
+            ORDER BY item_id
+            LIMIT 1
+        """
+
+        return self.fetch_one(
+            sql,
+            [brush_size_id]
+        )
+
+    def get_customer_outstanding_balance(
+        self,
+        customer_id: int
+    ) -> float:
+
+        sql = f"""
+            SELECT COALESCE(SUM(pending_amount), 0) AS outstanding_balance
+            FROM {Tables.SALES_HEADER}
+            WHERE customer_id = %s
+        """
+
+        row = self.fetch_one(sql, [customer_id])
+        return float(row.get("outstanding_balance", 0) or 0)
+
+    # ---------------------------------------------------------
     # Sales / Invoice Number Generation
     # ---------------------------------------------------------
 

@@ -48,6 +48,40 @@ export const createSales = async (
 };
 
 //---------------------------------------------------------
+// Create Sales From Order
+//---------------------------------------------------------
+
+export const createSalesFromOrder = async (
+    orderId,
+    invoiceData = {}
+) => {
+
+    const response = await apiClient.post(
+        `/sales/from-order/${orderId}`,
+        invoiceData
+    );
+
+    return response.data;
+
+};
+
+//---------------------------------------------------------
+// Get Customer Outstanding Balance
+//---------------------------------------------------------
+
+export const getCustomerOutstandingBalance = async (
+    customerId
+) => {
+
+    const response = await apiClient.get(
+        `/sales/customer/${customerId}/outstanding`
+    );
+
+    return response.data;
+
+};
+
+//---------------------------------------------------------
 // Update Sales
 //---------------------------------------------------------
 

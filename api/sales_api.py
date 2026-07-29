@@ -46,17 +46,27 @@ def get_sales(sales_id: int):
 
 @router.post("")
 def create_sales(request: SalesCreate):
-    try:
-        sales_header = request.model_dump()
-        items = sales_header.pop("items")
+    raise HTTPException(
+        status_code=400,
+        detail="Manual sales creation is disabled. Create sales only from an existing order using /sales/from-order/{order_id}."
+    )
 
-        sales_id = service.create_sales(
-            sales_header,
-            items
+
+# ---------------------------------------------------------
+# Create Sales From Order
+# ---------------------------------------------------------
+
+@router.post("/from-order/{order_id}")
+def create_sales_from_order(order_id: int, request: SalesInvoiceGenerate | None = None):
+    try:
+        invoice_data = request.model_dump() if request else None
+        sales_id = service.create_sales_from_order(
+            order_id,
+            invoice_data
         )
 
         return {
-            "message": "Sales created successfully.",
+            "message": "Sales created successfully from order.",
             "sales_id": sales_id
         }
 
@@ -65,7 +75,6 @@ def create_sales(request: SalesCreate):
             status_code=400,
             detail=str(ex)
         )
-
 
 # ---------------------------------------------------------
 # Update Sales
@@ -141,6 +150,18 @@ def record_payment(sales_id: int, request: SalesPayment):
             detail=str(ex)
         )
 
+
+# ---------------------------------------------------------
+# Customer Outstanding Balance
+# ---------------------------------------------------------
+
+@router.get("/customer/{customer_id}/outstanding")
+def get_customer_outstanding_balance(customer_id: int):
+    balance = service.repo.get_customer_outstanding_balance(customer_id)
+    return {
+        "customer_id": customer_id,
+        "outstanding_balance": round(balance, 2)
+    }
 
 # ---------------------------------------------------------
 # Delete Sales

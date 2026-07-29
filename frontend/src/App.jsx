@@ -53,7 +53,6 @@ function App() {
                     element={<CustomerForm />}
                 />
                 <Route path="/sales" element={<SalesList />} />
-                <Route path="/sales/new" element={<SalesEntry />} />
                 <Route path="/sales/:id" element={<SalesView />} />
                 <Route path="/sales/edit/:id" element={<SalesEntry />} />
                 <Route

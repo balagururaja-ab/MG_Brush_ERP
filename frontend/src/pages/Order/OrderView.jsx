@@ -42,6 +42,13 @@ import {
 
 } from "../../api/orderApi";
 
+import {
+
+    createSalesFromOrder,
+    getCustomerOutstandingBalance
+
+} from "../../api/salesApi";
+
 export default function OrderView() {
 
     const navigate = useNavigate();
@@ -53,6 +60,7 @@ export default function OrderView() {
     const [order, setOrder] = useState({});
 
     const [items, setItems] = useState([]);
+    const [outstandingBalance, setOutstandingBalance] = useState(0);
 
     //---------------------------------------------------------
     // Load Order
@@ -71,6 +79,13 @@ export default function OrderView() {
             setOrder(data);
 
             setItems(data.items || []);
+
+            if (data.customer_id) {
+
+                const outstanding = await getCustomerOutstandingBalance(data.customer_id);
+                setOutstandingBalance(outstanding.outstanding_balance || 0);
+
+            }
 
         } catch (err) {
 
@@ -92,6 +107,30 @@ export default function OrderView() {
         loadOrder();
 
     }, []);
+
+    //---------------------------------------------------------
+    // Create Sales From Order
+    //---------------------------------------------------------
+
+    const handleCreateSales = async () => {
+
+        try {
+
+            const response = await createSalesFromOrder(id, {
+                is_gst: false,
+                gst_percent: 0
+            });
+
+            navigate(`/sales/${response.sales_id}`);
+
+        } catch (err) {
+
+            console.error(err);
+            alert(err.response?.data?.detail || "Unable to create sales from this order.");
+
+        }
+
+    };
 
     //---------------------------------------------------------
     // Grand Total
@@ -208,19 +247,25 @@ export default function OrderView() {
 
                             disabled={
 
-                                order.invoice_generated
+                                order.status !== "CONFIRMED"
 
                             }
+
+                            onClick={handleCreateSales}
 
                         >
 
                             {
 
-                                order.invoice_generated
+                                order.status === "INVOICED"
 
-                                    ? "Invoice Generated"
+                                    ? "Sales Created"
 
-                                    : "Generate Invoice"
+                                    : order.status === "CONFIRMED"
+
+                                        ? "Create Sales"
+
+                                        : "Confirm Order"
 
                             }
 
@@ -329,6 +374,36 @@ export default function OrderView() {
                                 "-"
 
                             }
+
+                        </Typography>
+
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+
+                        <Typography
+
+                            variant="subtitle2"
+
+                            color="text.secondary"
+
+                            gutterBottom
+
+                        >
+
+                            Outstanding Balance
+
+                        </Typography>
+
+                        <Typography
+
+                            color={outstandingBalance > 0 ? "error" : "success.main"}
+
+                            fontWeight="bold"
+
+                        >
+
+                            ₹ {Number(outstandingBalance || 0).toFixed(2)}
 
                         </Typography>
 

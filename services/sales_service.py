@@ -1,5 +1,6 @@
 from datetime import date
 
+from database.order_repository import OrderRepository
 from database.sales_repository import SalesRepository
 from services.stock_service import StockService
 
@@ -9,6 +10,7 @@ class SalesService:
     def __init__(self):
 
         self.repo = SalesRepository()
+        self.order_repo = OrderRepository()
         self.stock_service = StockService()
 
     # ---------------------------------------------------------
@@ -185,6 +187,82 @@ class SalesService:
         except Exception:
             self.repo.rollback()
             raise
+
+    # ---------------------------------------------------------
+    # Create Sales From Order
+    # ---------------------------------------------------------
+
+    def create_sales_from_order(
+        self,
+        order_id: int,
+        invoice_data: dict | None = None
+    ) -> int:
+
+        order = self.order_repo.get_order_by_id(order_id)
+        if order is None:
+            raise ValueError("Order not found.")
+
+        if order.get("status") == "INVOICED":
+            raise ValueError("Order already converted to sales.")
+
+        if order.get("status") != "CONFIRMED":
+            raise ValueError(
+                "Sales can only be created from confirmed orders."
+            )
+
+        order_items = self.order_repo.get_order_items(order_id)
+        if len(order_items) == 0:
+            raise ValueError("Order must contain at least one item.")
+
+        sales_items = []
+        for order_item in order_items:
+            item = self.repo.get_item_for_order_item(
+                order_item["brand_id"],
+                order_item["brush_size_id"],
+                order_item.get("brand_name")
+            )
+
+            if item is None:
+                raise ValueError(
+                    f"No matching item found for brand {order_item['brand_id']} and brush size {order_item['brush_size_id']}."
+                )
+
+            sales_items.append({
+                "item_id": item["item_id"],
+                "quantity": float(order_item["quantity"]),
+                "rate": float(order_item["rate"]),
+                "discount_percent": 0,
+                "discount_amount": 0,
+                "cgst_amount": 0,
+                "sgst_amount": 0,
+                "igst_amount": 0
+            })
+
+        sales_header = {
+            "customer_id": order["customer_id"],
+            "sales_date": order.get("order_date") or date.today(),
+            "remarks": f"Created from order {order.get('order_no')}",
+            "payment_status": "PENDING",
+            "paid_amount": 0,
+            "pending_amount": 0,
+            "invoice_generated": False,
+            "is_gst": False,
+            "gst_percent": 0
+        }
+
+        sales_id = self.create_sales(sales_header, sales_items)
+
+        if invoice_data:
+            self.generate_invoice(sales_id, invoice_data)
+
+        self.order_repo.update_order(
+            order_id,
+            {
+                "status": "INVOICED"
+            }
+        )
+
+        return sales_id
 
     # ---------------------------------------------------------
     # Generate Invoice

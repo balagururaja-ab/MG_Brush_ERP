@@ -8,7 +8,7 @@ import {
 
 import { Link } from "react-router-dom";
 
-import logo from "../assets/logo.png";
+import logo from "../assets/selvi_brush_logo.png";
 
 export default function AppHeader() {
 
