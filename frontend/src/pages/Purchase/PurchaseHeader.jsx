@@ -175,7 +175,77 @@ export default function PurchaseHeader({
 
             </Grid>
 
-            <Grid size={{ xs:12, md:4 }}>
+            <Grid size={{ xs:12, md:3 }}>
+
+                <TextField
+
+                    fullWidth
+
+                    label="Paid Amount"
+
+                    name="paid_amount"
+
+                    value={purchase.paid_amount ?? 0}
+
+                    disabled
+
+                />
+
+            </Grid>
+
+            <Grid size={{ xs:12, md:3 }}>
+
+                <TextField
+
+                    fullWidth
+
+                    label="Pending Amount"
+
+                    name="pending_amount"
+
+                    value={purchase.pending_amount ?? 0}
+
+                    disabled
+
+                />
+
+            </Grid>
+
+            <Grid size={{ xs:12, md:3 }}>
+
+                <TextField
+
+                    fullWidth
+
+                    select
+
+                    label="Payment Status"
+
+                    name="payment_status"
+
+                    value={purchase.payment_status}
+
+                    onChange={onChange}
+
+                >
+
+                    <MenuItem value="PENDING">
+                        Pending
+                    </MenuItem>
+
+                    <MenuItem value="PAID">
+                        Paid
+                    </MenuItem>
+
+                    <MenuItem value="PARTIAL">
+                        Partial
+                    </MenuItem>
+
+                </TextField>
+
+            </Grid>
+
+            <Grid size={{ xs:12, md:3 }}>
 
                 <TextField
 

@@ -30,6 +30,7 @@ export default function SalesView() {
     const { id } = useParams();
 
     const [sales, setSales] = useState(null);
+    const [paymentHistory, setPaymentHistory] = useState([]);
     const [payment, setPayment] = useState({
         payment_date: new Date().toISOString().substring(0, 10),
         amount: 0,
@@ -55,6 +56,7 @@ export default function SalesView() {
             const data = await getSale(id);
 
             setSales(data);
+            setPaymentHistory(data.payments || []);
 
         }
         catch (err) {
@@ -112,13 +114,18 @@ export default function SalesView() {
                 return;
             }
 
-            await recordSalesPayment(sales.sales_id, payment);
+            const response = await recordSalesPayment(sales.sales_id, payment);
 
             await loadSales();
 
             setPayment(prev => ({ ...prev, amount: 0, remarks: "", reference_no: "", payment_mode: "" }));
 
-            alert("Payment recorded successfully.");
+            const receiptNo = response?.payment_summary?.receipt_no;
+            alert(
+                receiptNo
+                    ? `Payment recorded successfully. Receipt: ${receiptNo}`
+                    : "Payment recorded successfully."
+            );
 
         }
         catch (err) {
@@ -148,6 +155,9 @@ export default function SalesView() {
         );
 
     }
+
+    const canGenerateInvoice = !sales.invoice_generated;
+
         //---------------------------------------------------------
     // UI
     //---------------------------------------------------------
@@ -419,6 +429,15 @@ export default function SalesView() {
 
                 <Divider sx={{ my: 3 }} />
 
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                >
+                    Apply discount in Edit mode under Sales Items using the Disc % column,
+                    then save and generate invoice. Payment can be recorded as partial or full.
+                </Typography>
+
                 <Box
                     display="flex"
                     justifyContent="space-between"
@@ -436,7 +455,7 @@ export default function SalesView() {
                         <Button
                             variant="contained"
                             color={sales.invoice_generated ? "success" : "primary"}
-                            disabled={sales.invoice_generated}
+                            disabled={!canGenerateInvoice}
                             onClick={handleGenerateInvoice}
                         >
                             {sales.invoice_generated
@@ -634,6 +653,54 @@ export default function SalesView() {
                     </table>
 
                 </Box>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Typography
+                    variant="h6"
+                    fontWeight="bold"
+                    gutterBottom
+                >
+                    Payment History
+                </Typography>
+
+                {paymentHistory.length === 0 ? (
+                    <Typography color="text.secondary">
+                        No payment entries recorded yet.
+                    </Typography>
+                ) : (
+                    <Box sx={{ overflowX: "auto" }}>
+                        <table
+                            style={{
+                                width: "100%",
+                                borderCollapse: "collapse"
+                            }}
+                        >
+                            <thead>
+                                <tr>
+                                    <th align="left">Receipt</th>
+                                    <th align="left">Date</th>
+                                    <th align="right">Amount</th>
+                                    <th align="left">Mode</th>
+                                    <th align="left">Reference</th>
+                                    <th align="left">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paymentHistory.map((entry) => (
+                                    <tr key={entry.payment_id}>
+                                        <td>{entry.receipt_no || "-"}</td>
+                                        <td>{entry.payment_date}</td>
+                                        <td align="right">₹ {Number(entry.amount || 0).toFixed(2)}</td>
+                                        <td>{entry.payment_mode || "-"}</td>
+                                        <td>{entry.reference_no || "-"}</td>
+                                        <td>{entry.remarks || "-"}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </Box>
+                )}
 
                 <Divider sx={{ my: 3 }} />
 

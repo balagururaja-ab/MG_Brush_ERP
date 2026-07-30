@@ -45,7 +45,8 @@ import {
 import {
 
     createSalesFromOrder,
-    getCustomerOutstandingBalance
+    getCustomerOutstandingBalance,
+    getSalesByOrder
 
 } from "../../api/salesApi";
 
@@ -116,10 +117,17 @@ export default function OrderView() {
 
         try {
 
-            const response = await createSalesFromOrder(id, {
-                is_gst: false,
-                gst_percent: 0
-            });
+            if (order.status === "INVOICED") {
+
+                const linked = await getSalesByOrder(id);
+
+                navigate(`/sales/${linked.sales_id}`);
+
+                return;
+
+            }
+
+            const response = await createSalesFromOrder(id);
 
             navigate(`/sales/${response.sales_id}`);
 
@@ -248,6 +256,7 @@ export default function OrderView() {
                             disabled={
 
                                 order.status !== "CONFIRMED"
+                                && order.status !== "INVOICED"
 
                             }
 
@@ -259,7 +268,7 @@ export default function OrderView() {
 
                                 order.status === "INVOICED"
 
-                                    ? "Sales Created"
+                                    ? "Open Sales"
 
                                     : order.status === "CONFIRMED"
 

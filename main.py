@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,7 +14,18 @@ from api.order_api import router as order_router
 from api.master_api import router as master_router
 from api.production_api import router as production_router
 
-app = FastAPI(title="MG Brush ERP API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ---- startup ----
+    yield
+    # ---- shutdown: return all pooled connections to PostgreSQL ----
+    from database.connection import db  # noqa: PLC0415
+    if db._pool is not None and not db._pool.closed:
+        db._pool.closeall()
+
+
+app = FastAPI(title="MG Brush ERP API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

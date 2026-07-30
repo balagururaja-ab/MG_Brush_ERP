@@ -14,6 +14,35 @@ class SalesService:
         self.stock_service = StockService()
 
     # ---------------------------------------------------------
+    # Ensure Item Fields
+    # ---------------------------------------------------------
+
+    def ensure_item_fields(
+        self,
+        item: dict
+    ) -> None:
+
+        if item.get("item_id") in (None, ""):
+            raise ValueError("Please select a valid item.")
+
+        item_id = int(item["item_id"])
+        item["item_id"] = item_id
+
+        item_master = self.repo.get_item(item_id)
+        if item_master is None:
+            raise ValueError("Invalid item selected.")
+
+        # Backfill nullable detail fields from item master to satisfy DB constraints.
+        if item.get("unit_id") in (None, ""):
+            item["unit_id"] = item_master.get("unit_id")
+
+        if item.get("tax_id") in (None, ""):
+            item["tax_id"] = item_master.get("tax_id")
+
+        if item.get("unit_id") in (None, ""):
+            raise ValueError("Item is missing unit mapping. Please update item master.")
+
+    # ---------------------------------------------------------
     # Calculate Totals
     # ---------------------------------------------------------
 
@@ -86,6 +115,7 @@ class SalesService:
         self.validate_customer(sales_header["customer_id"])
 
         for item in items:
+            self.ensure_item_fields(item)
             self.stock_service.validate_stock(
                 item["item_id"],
                 float(item["quantity"])
@@ -153,6 +183,7 @@ class SalesService:
             raise ValueError("Sales entry not found.")
 
         for item in items:
+            self.ensure_item_fields(item)
             self.stock_service.validate_stock(
                 item["item_id"],
                 float(item["quantity"])
@@ -194,8 +225,7 @@ class SalesService:
 
     def create_sales_from_order(
         self,
-        order_id: int,
-        invoice_data: dict | None = None
+        order_id: int
     ) -> int:
 
         order = self.order_repo.get_order_by_id(order_id)
@@ -216,19 +246,64 @@ class SalesService:
 
         sales_items = []
         for order_item in order_items:
-            item = self.repo.get_item_for_order_item(
-                order_item["brand_id"],
-                order_item["brush_size_id"],
-                order_item.get("brand_name")
+            order_item_label = " ".join(
+                part.strip()
+                for part in [
+                    str(order_item.get("brand_name") or ""),
+                    str(order_item.get("size_name") or "")
+                ]
+                if part and part.strip()
             )
+
+            item = None
+            item_id = order_item.get("item_id")
+
+            if item_id not in (None, ""):
+                item = self.repo.get_item(int(item_id))
+
+            if item is None:
+                candidates = self.repo.get_items_for_order_item(
+                    order_item["brand_id"],
+                    order_item["brush_size_id"],
+                    order_item.get("brand_name")
+                )
+
+                if len(candidates) == 0:
+                    raise ValueError(
+                        f"No matching item found for brand {order_item['brand_id']} and brush size {order_item['brush_size_id']}."
+                    )
+
+                if len(candidates) == 1:
+                    item = candidates[0]
+                else:
+                    line_rate = float(order_item.get("rate") or 0)
+                    rate_matches = [
+                        row for row in candidates
+                        if float(row.get("selling_rate") or 0) == line_rate
+                    ]
+
+                    if len(rate_matches) == 1:
+                        item = rate_matches[0]
+                    else:
+                        raise ValueError(
+                            f"Multiple items match {order_item_label or 'selected order line'}. Please edit the order and select the exact item."
+                        )
 
             if item is None:
                 raise ValueError(
                     f"No matching item found for brand {order_item['brand_id']} and brush size {order_item['brush_size_id']}."
                 )
 
+            self.stock_service.validate_stock(
+                item["item_id"],
+                float(order_item["quantity"]),
+                item_name=order_item_label or item.get("item_name"),
+                item_code=None
+            )
+
             sales_items.append({
                 "item_id": item["item_id"],
+                "unit_id": item.get("unit_id"),
                 "quantity": float(order_item["quantity"]),
                 "rate": float(order_item["rate"]),
                 "discount_percent": 0,
@@ -239,6 +314,7 @@ class SalesService:
             })
 
         sales_header = {
+            "order_id": order_id,
             "customer_id": order["customer_id"],
             "sales_date": order.get("order_date") or date.today(),
             "remarks": f"Created from order {order.get('order_no')}",
@@ -252,15 +328,13 @@ class SalesService:
 
         sales_id = self.create_sales(sales_header, sales_items)
 
-        if invoice_data:
-            self.generate_invoice(sales_id, invoice_data)
-
         self.order_repo.update_order(
             order_id,
             {
                 "status": "INVOICED"
             }
         )
+        self.order_repo.commit()
 
         return sales_id
 
@@ -331,8 +405,23 @@ class SalesService:
             "payment_status": payment_status
         }
 
-        self.repo.update_sales_payment(sales_id, update_data)
-        return update_data
+        payment_result = self.repo.apply_payment(
+            sales_id,
+            {
+                "payment_date": payment["payment_date"],
+                "amount": amount,
+                "payment_mode": payment.get("payment_mode"),
+                "reference_no": payment.get("reference_no"),
+                "remarks": payment.get("remarks")
+            },
+            update_data
+        )
+
+        return {
+            **update_data,
+            "payment_id": payment_result["payment_id"],
+            "receipt_no": payment_result["receipt_no"]
+        }
 
     # ---------------------------------------------------------
     # Delete Sales

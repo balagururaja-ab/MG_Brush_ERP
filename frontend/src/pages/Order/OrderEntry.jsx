@@ -55,6 +55,7 @@ import {
 } from "../../api/customerApi";
 
 import {
+    getItems,
     getBrands,
     getBrushSizes
 } from "../../api/itemApi";
@@ -81,6 +82,8 @@ const emptyOrder = {
 
 const emptyItem = {
 
+    item_id: "",
+
     brand_id: "",
 
     brush_size_id: "",
@@ -104,6 +107,8 @@ export default function OrderEntry() {
     const [loading, setLoading] = useState(false);
 
     const [customers, setCustomers] = useState([]);
+
+    const [itemsMaster, setItemsMaster] = useState([]);
 
     const [brushSizes, setBrushSizes] = useState([]);
 
@@ -181,9 +186,18 @@ export default function OrderEntry() {
 
             const data = await getOrder(id);
 
-            setOrder(data.order);
+            const orderData = data?.order || data || {};
 
-            setItems(data.items);
+            setOrder({
+
+                ...emptyOrder,
+
+                ...orderData
+
+            });
+
+            const loadedItems = orderData.items || [];
+            setItems(loadedItems.length > 0 ? loadedItems : [{ ...emptyItem }]);
 
         }
 
@@ -214,6 +228,8 @@ export default function OrderEntry() {
     useEffect(() => {
 
         loadCustomers();
+
+        loadItems();
 
         loadBrands();
 
@@ -302,6 +318,29 @@ export default function OrderEntry() {
 
         updated[index][field] = value;
 
+        if (
+            field === "brand_id" ||
+            field === "brush_size_id"
+        ) {
+            const brandId = Number(updated[index].brand_id);
+            const brushSizeId = Number(updated[index].brush_size_id);
+
+            updated[index].item_id = "";
+
+            if (brandId && brushSizeId) {
+                const matches = itemsMaster.filter(
+                    (masterItem) =>
+                        Number(masterItem.brand_id) === brandId &&
+                        Number(masterItem.brush_size_id) === brushSizeId
+                );
+
+                if (matches.length === 1) {
+                    updated[index].item_id = matches[0].item_id;
+                    updated[index].rate = Number(matches[0].selling_rate || 0);
+                }
+            }
+        }
+
         //-----------------------------------------------------
         // Auto Fill Selling Rate
         //-----------------------------------------------------
@@ -320,7 +359,13 @@ export default function OrderEntry() {
 
                     Number(value)
 
-            );            
+            );
+
+            if (selected) {
+                updated[index].brand_id = selected.brand_id;
+                updated[index].brush_size_id = selected.brush_size_id;
+                updated[index].rate = Number(selected.selling_rate || 0);
+            }
 
         }
 
@@ -719,7 +764,7 @@ export default function OrderEntry() {
 
                                     xs={12}
 
-                                    md={3}
+                                    md={2}
 
                                 >
 
@@ -797,7 +842,7 @@ export default function OrderEntry() {
 
                                 </Grid>
 
-                                <Grid item xs={12} md={3}>
+                                <Grid item xs={12} md={2}>
 
                                     <TextField
                                         select
@@ -827,6 +872,39 @@ export default function OrderEntry() {
                                     </TextField>
 
                                     </Grid>
+
+                                <Grid item xs={12} md={2}>
+
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Item"
+                                        value={item.item_id || ""}
+                                        onChange={(e) =>
+                                            handleItemChange(
+                                                index,
+                                                "item_id",
+                                                e.target.value
+                                            )
+                                        }
+                                    >
+                                        {itemsMaster
+                                            .filter(
+                                                (masterItem) =>
+                                                    Number(masterItem.brand_id) === Number(item.brand_id) &&
+                                                    Number(masterItem.brush_size_id) === Number(item.brush_size_id)
+                                            )
+                                            .map((masterItem) => (
+                                                <MenuItem
+                                                    key={masterItem.item_id}
+                                                    value={masterItem.item_id}
+                                                >
+                                                    {masterItem.item_name}
+                                                </MenuItem>
+                                            ))}
+                                    </TextField>
+
+                                </Grid>
 
                                 <Grid
 
@@ -1115,17 +1193,32 @@ export default function OrderEntry() {
 
                             ) {
 
-                                if(!row.brand_id)
-                                    {
-                                        alert("Please select brand.");
-                                        return;
-                                    }
+                                const brandId = Number(row.brand_id);
+                                const brushSizeId = Number(row.brush_size_id);
 
-                                    if(!row.brush_size_id)
-                                    {
-                                        alert("Please select brush size.");
-                                        return;
-                                    }
+                                if (!brandId) {
+
+                                    alert("Please select a valid brand.");
+
+                                    return;
+
+                                }
+
+                                if (!brushSizeId) {
+
+                                    alert("Please select a valid brush size.");
+
+                                    return;
+
+                                }
+
+                                if (!Number(row.item_id)) {
+
+                                    alert("Please select a valid item.");
+
+                                    return;
+
+                                }
 
                                 if (
 

@@ -32,6 +32,12 @@ export default function PurchaseEntry() {
             .toISOString()
             .substring(0, 10),
 
+        paid_amount: 0,
+
+        pending_amount: 0,
+
+        payment_status: "PENDING",
+
         remarks: ""
 
     });
@@ -42,11 +48,13 @@ export default function PurchaseEntry() {
 
     const handleChange = (e) => {
 
-        const { name, value } = e.target;
+        const { name, value, type } = e.target;
 
         setPurchase(prev => ({
             ...prev,
-            [name]: value
+            [name]: type === "number"
+                ? Number(value)
+                : value
         }));
 
     };

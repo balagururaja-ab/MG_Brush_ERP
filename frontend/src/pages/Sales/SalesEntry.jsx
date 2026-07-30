@@ -31,6 +31,21 @@ import {
 
 } from "../../api/salesApi";
 
+const emptySalesItem = {
+    item_id: "",
+    unit_id: "",
+    tax_id: "",
+    quantity: 1,
+    rate: 0,
+    discount_percent: 0,
+    discount_amount: 0,
+    taxable_amount: 0,
+    cgst_amount: 0,
+    sgst_amount: 0,
+    igst_amount: 0,
+    total_amount: 0,
+};
+
 export default function SalesEntry() {
 
     const navigate = useNavigate();
@@ -117,7 +132,8 @@ export default function SalesEntry() {
 
             });
 
-            setItems(data.items);
+            const loadedItems = Array.isArray(data.items) ? data.items : [];
+            setItems(loadedItems.length > 0 ? loadedItems : [{ ...emptySalesItem }]);
 
         }
         catch (err) {
@@ -167,6 +183,38 @@ export default function SalesEntry() {
     const handleSave = async () => {
 
         try {
+
+            if (!sales.customer_id) {
+                alert("Please select customer.");
+                return;
+            }
+
+            if (!items.length) {
+                alert("Please add at least one item in Sales Items.");
+                return;
+            }
+
+            for (const row of items) {
+                if (!Number(row.item_id)) {
+                    alert("Please select a valid item.");
+                    return;
+                }
+
+                if (!Number(row.quantity) || Number(row.quantity) <= 0) {
+                    alert("Quantity should be greater than zero.");
+                    return;
+                }
+
+                if (!Number(row.rate) || Number(row.rate) <= 0) {
+                    alert("Rate should be greater than zero.");
+                    return;
+                }
+
+                if (row.unit_id === null || row.unit_id === "" || typeof row.unit_id === "undefined") {
+                    alert("Selected item is missing Unit mapping. Please update Item master.");
+                    return;
+                }
+            }
 
             const payload = {
 

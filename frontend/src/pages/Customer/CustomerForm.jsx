@@ -130,11 +130,31 @@ export default function CustomerForm() {
 
         try {
 
+            // Convert empty strings to null for optional fields,
+            // and coerce numeric fields so the API schema accepts them.
+            const payload = {
+                ...customer,
+                email: customer.email?.trim() || null,
+                gstin: customer.gstin?.trim() || null,
+                pan_number: customer.pan_number?.trim() || null,
+                phone: customer.phone?.trim() || null,
+                mobile: customer.mobile?.trim() || null,
+                address1: customer.address1?.trim() || null,
+                address2: customer.address2?.trim() || null,
+                city: customer.city?.trim() || null,
+                state: customer.state?.trim() || null,
+                pincode: customer.pincode?.trim() || null,
+                contact_person: customer.contact_person?.trim() || null,
+                remarks: customer.remarks?.trim() || null,
+                credit_limit: Number(customer.credit_limit) || 0,
+                credit_days: Number(customer.credit_days) || 0,
+            };
+
             if (isEdit) {
 
                 await updateCustomer(
                     id,
-                    customer
+                    payload
                 );
 
                 alert(
@@ -145,7 +165,7 @@ export default function CustomerForm() {
             else {
 
                 await createCustomer(
-                    customer
+                    payload
                 );
 
                 alert(
@@ -161,10 +181,13 @@ export default function CustomerForm() {
 
             console.error(err);
 
-            alert(
-                err.response?.data?.detail ||
-                "Unable to save customer."
-            );
+            const detail = err.response?.data?.detail;
+            const message =
+                Array.isArray(detail)
+                    ? detail.map(d => d.msg || JSON.stringify(d)).join(", ")
+                    : detail || "Unable to save customer.";
+
+            alert(message);
 
         }
 

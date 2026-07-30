@@ -284,7 +284,9 @@ class StockService:
     def validate_stock(
         self,
         item_id: int,
-        quantity: float
+        quantity: float,
+        item_name: str | None = None,
+        item_code: str | None = None
     ):
 
         stock = self.repo.get_current_stock(
@@ -301,9 +303,15 @@ class StockService:
 
         if current_qty < quantity:
 
+            label = ""
+            if item_code and item_name:
+                label = f" for {item_name} ({item_code})"
+            elif item_name:
+                label = f" for {item_name}"
+
             raise ValueError(
 
-                f"Insufficient stock. "
+                f"Insufficient stock{label}. "
                 f"Available: {current_qty}, "
                 f"Requested: {quantity}"
 

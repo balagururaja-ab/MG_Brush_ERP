@@ -1,5 +1,6 @@
 import {
 
+    useEffect,
     useState
 
 } from "react";
@@ -11,6 +12,8 @@ import {
     Typography,
 
     TextField,
+
+    MenuItem,
 
     Button,
 
@@ -36,6 +39,12 @@ import {
 
 } from "../../api/stockApi";
 
+import {
+
+    getItems
+
+} from "../../api/itemApi";
+
 export default function OpeningStock() {
 
     const [form, setForm] = useState({
@@ -53,6 +62,31 @@ export default function OpeningStock() {
     const [error, setError] = useState("");
 
     const [loading, setLoading] = useState(false);
+
+    const [items, setItems] = useState([]);
+
+    useEffect(() => {
+
+        loadItems();
+
+    }, []);
+
+    const loadItems = async () => {
+
+        try {
+
+            const data = await getItems();
+
+            setItems(data);
+
+        }
+        catch (err) {
+
+            console.error(err);
+
+        }
+
+    };
 
         const handleChange = (e) => {
 
@@ -229,7 +263,9 @@ export default function OpeningStock() {
 
                             fullWidth
 
-                            label="Item ID"
+                            select
+
+                            label="Item"
 
                             name="item_id"
 
@@ -239,7 +275,29 @@ export default function OpeningStock() {
 
                             required
 
-                        />
+                        >
+
+                            <MenuItem value="">
+                                Select Item
+                            </MenuItem>
+
+                            {items.map((item) => (
+
+                                <MenuItem
+
+                                    key={item.item_id}
+
+                                    value={item.item_id}
+
+                                >
+
+                                    {item.item_name}
+
+                                </MenuItem>
+
+                            ))}
+
+                        </TextField>
 
                     </Grid>
 

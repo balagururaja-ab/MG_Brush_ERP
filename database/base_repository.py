@@ -23,7 +23,37 @@ class BaseRepository:
 
     def __init__(self):
 
+        self.conn = None          # set before acquire so __del__ is safe
         self.conn = db.connect()
+
+    def close(self):
+        """Return this repository's connection back to the pool."""
+        if self.conn is not None:
+            db.release(self.conn)
+            self.conn = None
+
+    def __del__(self):
+        self.close()
+
+    def _ensure_connection(self):
+        """Reconnect when this repository holds a stale/closed connection."""
+        if self.conn is None or getattr(self.conn, "closed", 1) != 0:
+            self.conn = db.connect()
+
+    def _safe_rollback(self):
+        """Best-effort rollback that avoids masking root errors on dead connections."""
+        if self.conn is None:
+            return
+
+        if getattr(self.conn, "closed", 1) != 0:
+            return
+
+        try:
+            self.conn.rollback()
+            # After rollback, reset the connection so it can be reused cleanly.
+            self.conn.autocommit = False
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     # Generic Execute
@@ -34,12 +64,19 @@ class BaseRepository:
         query: str,
         params: tuple | list | None = None
     ) -> int:
+        try:
 
-        with self.conn.cursor() as cursor:
+            self._ensure_connection()
 
-            cursor.execute(query, params)
+            with self.conn.cursor() as cursor:
 
-            return cursor.rowcount
+                cursor.execute(query, params)
+
+                return cursor.rowcount
+
+        except Exception:
+            self._safe_rollback()
+            raise
 
     # ------------------------------------------------------------------
     # Fetch One
@@ -50,12 +87,19 @@ class BaseRepository:
         query: str,
         params: tuple | list | None = None
     ) -> dict | None:
+        try:
 
-        with self.conn.cursor() as cursor:
+            self._ensure_connection()
 
-            cursor.execute(query, params)
+            with self.conn.cursor() as cursor:
 
-            return cursor.fetchone()
+                cursor.execute(query, params)
+
+                return cursor.fetchone()
+
+        except Exception:
+            self._safe_rollback()
+            raise
 
     # ------------------------------------------------------------------
     # Fetch All
@@ -66,12 +110,19 @@ class BaseRepository:
         query: str,
         params: tuple | list | None = None
     ) -> list[dict]:
+        try:
 
-        with self.conn.cursor() as cursor:
+            self._ensure_connection()
 
-            cursor.execute(query, params)
+            with self.conn.cursor() as cursor:
 
-            return cursor.fetchall()
+                cursor.execute(query, params)
+
+                return cursor.fetchall()
+
+        except Exception:
+            self._safe_rollback()
+            raise
 
     # ------------------------------------------------------------------
     # Generic INSERT
@@ -83,6 +134,8 @@ class BaseRepository:
         data: dict,
         returning: str | None = None
     ) -> Any:
+
+        self._ensure_connection()
 
         columns = list(data.keys())
 
@@ -122,8 +175,11 @@ class BaseRepository:
         self,
         table: str,
         data: dict,
-        where: dict
+        where: dict,
+        auto_commit: bool = True
     ) -> int:
+
+        self._ensure_connection()
 
         set_clause = ", ".join(
             f"{column}=%s"
@@ -149,7 +205,8 @@ class BaseRepository:
 
             rows = cursor.rowcount
 
-        self.commit()
+        if auto_commit:
+            self.commit()
 
         return rows
 
@@ -160,8 +217,11 @@ class BaseRepository:
     def delete(
         self,
         table: str,
-        where: dict
+        where: dict,
+        auto_commit: bool = True
     ) -> int:
+
+        self._ensure_connection()
 
         where_clause = " AND ".join(
             f"{column}=%s"
@@ -179,7 +239,8 @@ class BaseRepository:
 
             rows = cursor.rowcount
 
-        self.commit()
+        if auto_commit:
+            self.commit()
 
         return rows
 
@@ -277,11 +338,13 @@ class BaseRepository:
 
     def commit(self):
 
+        self._ensure_connection()
+
         self.conn.commit()
 
     def rollback(self):
 
-        self.conn.rollback()
+        self._safe_rollback()
 
     def find_by_id(
         self,

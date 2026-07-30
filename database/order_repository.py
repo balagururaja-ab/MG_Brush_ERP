@@ -10,6 +10,24 @@ from database.constants import Tables
 
 class OrderRepository(BaseRepository):
 
+    def _order_details_has_item_id(self) -> bool:
+
+        sql = """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = %s
+              AND table_name = %s
+              AND column_name = 'item_id'
+            LIMIT 1
+        """
+
+        result = self.fetch_one(
+            sql,
+            ["mgbrush", "order_details"]
+        )
+
+        return result is not None
+
     # ---------------------------------------------------------
     # Customer
     # ---------------------------------------------------------
@@ -33,20 +51,39 @@ class OrderRepository(BaseRepository):
     # Item
     # ---------------------------------------------------------
 
-    # def get_item(
-    #     self,
-    #     item_id: int
-    # ):
+    def get_item(
+        self,
+        item_id: int
+    ):
 
-    #     return self.find_one(
+        return self.find_one(
 
-    #         Tables.ITEMS,
+            Tables.ITEMS,
 
-    #         {
-    #             "item_id": item_id
-    #         }
+            {
+                "item_id": item_id
+            }
 
-    #     )
+        )
+
+    def get_items_for_brand_and_size(
+        self,
+        brand_id: int,
+        brush_size_id: int
+    ):
+
+        sql = f"""
+            SELECT *
+            FROM {Tables.ITEMS}
+            WHERE brand_id = %s
+              AND brush_size_id = %s
+            ORDER BY item_id
+        """
+
+        return self.fetch_all(
+            sql,
+            [brand_id, brush_size_id]
+        )
 
     # ---------------------------------------------------------
     # Brand
@@ -114,11 +151,16 @@ class OrderRepository(BaseRepository):
         item: dict
     ):
 
+        insert_item = dict(item)
+
+        if not self._order_details_has_item_id():
+            insert_item.pop("item_id", None)
+
         return self.insert(
 
             Tables.ORDER_DETAILS,
 
-            item,
+            insert_item,
 
             "order_detail_id"
 
@@ -142,7 +184,26 @@ class OrderRepository(BaseRepository):
 
             {
                 "order_id": order_id
-            }
+            },
+
+            auto_commit=False
+
+        )
+
+    def delete_order_item_no_commit(
+        self,
+        order_detail_id: int
+    ):
+        """Delete an order item without auto-committing (use inside a transaction)."""
+        return self.delete(
+
+            Tables.ORDER_DETAILS,
+
+            {
+                "order_detail_id": order_detail_id
+            },
+
+            auto_commit=False
 
         )
 
@@ -224,19 +285,22 @@ class OrderRepository(BaseRepository):
         self,
         order_id: int
     ):
-
         sql = f"""
             SELECT
 
                 od.order_detail_id,
                 od.order_id,
                 od.line_no,
+                od.item_id,
 
                 od.brand_id,
                 b.brand_name,
 
                 od.brush_size_id,
                 bs.size_name,
+
+                i.item_name,
+                i.item_code,
 
                 od.quantity,
                 od.rate,
@@ -250,15 +314,63 @@ class OrderRepository(BaseRepository):
             INNER JOIN {Tables.BRUSH_SIZE_MASTER} bs
                     ON od.brush_size_id = bs.brush_size_id
 
+            LEFT JOIN {Tables.ITEMS} i
+                    ON od.item_id = i.item_id
+
             WHERE od.order_id = %s
 
             ORDER BY od.line_no
         """
 
-        return self.fetch_all(
-            sql,
-            [order_id]
-        )
+        try:
+            return self.fetch_all(
+                sql,
+                [order_id]
+            )
+        except Exception as exc:
+            # Backward compatibility for databases that have not yet applied
+            # the migration adding order_details.item_id.
+            if "column od.item_id does not exist" not in str(exc):
+                raise
+
+            legacy_sql = f"""
+                SELECT
+
+                    od.order_detail_id,
+                    od.order_id,
+                    od.line_no,
+                    NULL::integer AS item_id,
+
+                    od.brand_id,
+                    b.brand_name,
+
+                    od.brush_size_id,
+                    bs.size_name,
+
+                    NULL::text AS item_name,
+                    NULL::text AS item_code,
+
+                    od.quantity,
+                    od.rate,
+                    od.amount
+
+                FROM {Tables.ORDER_DETAILS} od
+
+                INNER JOIN {Tables.BRAND_MASTER} b
+                        ON od.brand_id = b.brand_id
+
+                INNER JOIN {Tables.BRUSH_SIZE_MASTER} bs
+                        ON od.brush_size_id = bs.brush_size_id
+
+                WHERE od.order_id = %s
+
+                ORDER BY od.line_no
+            """
+
+            return self.fetch_all(
+                legacy_sql,
+                [order_id]
+            )
 
     # ---------------------------------------------------------
     # List Orders

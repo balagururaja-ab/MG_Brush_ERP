@@ -15,6 +15,20 @@ export const getSales = async () => {
 };
 
 //---------------------------------------------------------
+// Customer Pending Summary
+//---------------------------------------------------------
+
+export const getSalesPendingSummary = async () => {
+
+    const response = await apiClient.get(
+        "/sales/pending-summary"
+    );
+
+    return response.data;
+
+};
+
+//---------------------------------------------------------
 // Get Sales By Id
 //---------------------------------------------------------
 
@@ -52,13 +66,27 @@ export const createSales = async (
 //---------------------------------------------------------
 
 export const createSalesFromOrder = async (
-    orderId,
-    invoiceData = {}
+    orderId
 ) => {
 
     const response = await apiClient.post(
-        `/sales/from-order/${orderId}`,
-        invoiceData
+        `/sales/from-order/${orderId}`
+    );
+
+    return response.data;
+
+};
+
+//---------------------------------------------------------
+// Get Sales By Order Id
+//---------------------------------------------------------
+
+export const getSalesByOrder = async (
+    orderId
+) => {
+
+    const response = await apiClient.get(
+        `/sales/by-order/${orderId}`
     );
 
     return response.data;

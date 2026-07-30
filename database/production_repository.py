@@ -290,8 +290,8 @@ class ProductionRepository(BaseRepository):
 
             FROM {Tables.PRODUCTION_FG_DETAILS} d
 
-            INNER JOIN {Tables.BRAND_MASTER} b
-                    ON d.brand_id = b.brand_id
+                INNER JOIN {Tables.ITEMS} i
+                    ON d.item_id = i.item_id
 
             INNER JOIN {Tables.BRUSH_SIZE_MASTER} s
                     ON d.brush_size_id = s.brush_size_id

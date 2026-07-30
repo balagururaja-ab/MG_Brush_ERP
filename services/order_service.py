@@ -14,9 +14,59 @@ from database.order_repository import OrderRepository
 
 class OrderService:
 
+    ORDER_HEADER_COLUMNS = {
+        "order_id",
+        "order_no",
+        "customer_id",
+        "order_date",
+        "expected_delivery",
+        "status",
+        "remarks",
+        "created_by",
+        "updated_by",
+        "created_at",
+        "updated_at",
+    }
+
+    ORDER_DETAIL_COLUMNS = {
+        "order_detail_id",
+        "order_id",
+        "line_no",
+        "item_id",
+        "brand_id",
+        "brush_size_id",
+        "quantity",
+        "rate",
+        "amount",
+    }
+
     def __init__(self):
 
         self.repo = OrderRepository()
+
+    # ---------------------------------------------------------
+    # Sanitize Order Payload
+    # ---------------------------------------------------------
+
+    def sanitize_order_payload(self, order: dict) -> dict:
+
+        return {
+            key: value
+            for key, value in order.items()
+            if key in self.ORDER_HEADER_COLUMNS
+            and not isinstance(value, (dict, list, tuple))
+        }
+
+    # ---------------------------------------------------------
+    # Sanitize Order Item
+    # ---------------------------------------------------------
+
+    def sanitize_order_item(self, item: dict) -> dict:
+        return {
+            key: value
+            for key, value in item.items()
+            if key in self.ORDER_DETAIL_COLUMNS
+        }
 
     # ---------------------------------------------------------
     # Generate Order Number
@@ -74,8 +124,11 @@ class OrderService:
 
         for item in items:
 
+            brand_id = int(item["brand_id"])
+            brush_size_id = int(item["brush_size_id"])
+
             brand = self.repo.get_brand(
-                item["brand_id"]
+                brand_id
             )
 
             if brand is None:
@@ -85,7 +138,7 @@ class OrderService:
                 )
 
             brush_size = self.repo.get_brush_size(
-                item["brush_size_id"]
+                brush_size_id
             )
 
             if brush_size is None:
@@ -95,8 +148,8 @@ class OrderService:
                 )
 
             key = (
-                item["brand_id"],
-                item["brush_size_id"]
+                brand_id,
+                brush_size_id
             )
 
             if key in combinations:
@@ -106,6 +159,54 @@ class OrderService:
                 )
 
             combinations.append(key)
+
+            item_id = item.get("item_id")
+
+            if item_id not in (None, ""):
+
+                item_id = int(item_id)
+                resolved_item = self.repo.get_item(item_id)
+
+                if resolved_item is None:
+                    raise ValueError("Invalid Item.")
+
+                if (
+                    int(resolved_item.get("brand_id")) != brand_id
+                    or int(resolved_item.get("brush_size_id")) != brush_size_id
+                ):
+                    raise ValueError(
+                        "Selected item does not belong to chosen Brand and Brush Size."
+                    )
+
+                item["item_id"] = item_id
+
+            else:
+                candidates = self.repo.get_items_for_brand_and_size(
+                    brand_id,
+                    brush_size_id
+                )
+
+                if len(candidates) == 0:
+                    raise ValueError(
+                        "No item found for selected Brand and Brush Size."
+                    )
+
+                if len(candidates) == 1:
+                    item["item_id"] = int(candidates[0]["item_id"])
+
+                else:
+                    rate = float(item["rate"])
+                    rate_matches = [
+                        row for row in candidates
+                        if float(row.get("selling_rate") or 0) == rate
+                    ]
+
+                    if len(rate_matches) == 1:
+                        item["item_id"] = int(rate_matches[0]["item_id"])
+                    else:
+                        raise ValueError(
+                            "Multiple items exist for selected Brand and Brush Size. Please select the exact item."
+                        )
 
             qty = float(item["quantity"])
 
@@ -174,11 +275,16 @@ class OrderService:
 
     ):
 
+        clean_order = self.sanitize_order_payload(order)
+
         self.validate_customer(
-            order["customer_id"]
+            clean_order["customer_id"]
         )
 
         for item in items:
+
+            if item.get("item_id") not in (None, ""):
+                item["item_id"] = int(item["item_id"])
 
             item["brand_id"] = int(
                 item["brand_id"]
@@ -200,9 +306,9 @@ class OrderService:
             items
         )
 
-        order["order_no"] = self.generate_order_no()
+        clean_order["order_no"] = self.generate_order_no()
 
-        order.setdefault(
+        clean_order.setdefault(
             "order_date",
             date.today()
         )
@@ -210,7 +316,7 @@ class OrderService:
         try:
 
             order_id = self.repo.create_order(
-                order
+                clean_order
             )
 
             for line_no, item in enumerate(
@@ -233,7 +339,7 @@ class OrderService:
                 )
 
                 self.repo.create_order_item(
-                    item
+                    self.sanitize_order_item(item)
                 )
 
             self.repo.commit()
@@ -268,11 +374,16 @@ class OrderService:
                 "Please add at least one item."
             )
 
+        clean_order = self.sanitize_order_payload(order)
+
         self.validate_customer(
-            order["customer_id"]
+            clean_order["customer_id"]
         )
 
         for item in items:
+
+            if item.get("item_id") not in (None, ""):
+                item["item_id"] = int(item["item_id"])
 
             item["brand_id"] = int(
                 item["brand_id"]
@@ -310,7 +421,7 @@ class OrderService:
 
                 order_id,
 
-                order
+                clean_order
 
             )
 
@@ -320,7 +431,7 @@ class OrderService:
 
             for old in old_items:
 
-                self.repo.delete_order_item(
+                self.repo.delete_order_item_no_commit(
 
                     old["order_detail_id"]
 
@@ -349,7 +460,7 @@ class OrderService:
                 )
 
                 self.repo.create_order_item(
-                    item
+                    self.sanitize_order_item(item)
                 )
 
             self.repo.commit()

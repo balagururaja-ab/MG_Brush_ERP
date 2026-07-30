@@ -23,6 +23,15 @@ def get_all():
 
 
 # ---------------------------------------------------------
+# Customer Pending Summary
+# ---------------------------------------------------------
+
+@router.get("/pending-summary")
+def get_pending_summary():
+    return service.repo.get_customer_pending_summary()
+
+
+# ---------------------------------------------------------
 # Get Sales By Id
 # ---------------------------------------------------------
 
@@ -37,7 +46,27 @@ def get_sales(sales_id: int):
 
     items = service.repo.get_sales_items(sales_id)
     sales["items"] = items
+    sales["payments"] = service.repo.get_sales_payment_history(sales_id)
     return sales
+
+
+# ---------------------------------------------------------
+# Get Sales By Order Id
+# ---------------------------------------------------------
+
+@router.get("/by-order/{order_id}")
+def get_sales_by_order(order_id: int):
+    sales = service.repo.get_sales_by_order_id(order_id)
+    if sales is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Sales entry not found for this order."
+        )
+
+    return {
+        "order_id": order_id,
+        "sales_id": sales["sales_id"]
+    }
 
 
 # ---------------------------------------------------------
@@ -57,12 +86,10 @@ def create_sales(request: SalesCreate):
 # ---------------------------------------------------------
 
 @router.post("/from-order/{order_id}")
-def create_sales_from_order(order_id: int, request: SalesInvoiceGenerate | None = None):
+def create_sales_from_order(order_id: int):
     try:
-        invoice_data = request.model_dump() if request else None
         sales_id = service.create_sales_from_order(
-            order_id,
-            invoice_data
+            order_id
         )
 
         return {
