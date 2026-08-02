@@ -177,3 +177,20 @@ export const recordSalesPayment = async (
     return response.data;
 
 };
+
+// ---------------------------------------------------------
+// Get Sales Payment Receipt
+// ---------------------------------------------------------
+
+export const getSalesPaymentReceipt = async (
+    salesId,
+    paymentId
+) => {
+
+    const response = await apiClient.get(
+        `/sales/${salesId}/payment/${paymentId}`
+    );
+
+    return response.data;
+
+};

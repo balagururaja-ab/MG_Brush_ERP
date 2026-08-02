@@ -7,8 +7,11 @@ import {
     Grid,
     Button,
     Box,
-    TextField
+    TextField,
+    IconButton
 } from "@mui/material";
+
+import PrintIcon from "@mui/icons-material/Print";
 
 import {
     useNavigate,
@@ -20,8 +23,11 @@ import MainLayout from "../../layouts/MainLayout";
 import {
     getSale,
     generateSalesInvoice,
-    recordSalesPayment
+    recordSalesPayment,
+    getSalesPaymentReceipt
 } from "../../api/salesApi";
+
+import companyLogo from "../../assets/selvi_brush_logo.png";
 
 export default function SalesView() {
 
@@ -133,6 +139,82 @@ export default function SalesView() {
             console.error(err);
 
             alert(err.response?.data?.detail || "Unable to record payment.");
+
+        }
+
+    };
+
+    const handlePrintPaymentReceipt = async (paymentId) => {
+
+        try {
+
+            const receipt = await getSalesPaymentReceipt(
+                sales.sales_id,
+                paymentId
+            );
+
+            const printWindow = window.open("", "_blank", "width=900,height=700");
+
+            if (!printWindow) {
+                alert("Popup blocked. Please allow popups to print receipt.");
+                return;
+            }
+
+            const receiptHtml = `
+                <html>
+                    <head>
+                        <title>Sales Payment Receipt</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
+                            .header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+                            .logo { width: 64px; height: 64px; object-fit: contain; }
+                            .company { font-size: 24px; font-weight: 700; margin: 0; }
+                            h2 { margin-bottom: 8px; }
+                            .muted { color: #666; margin-bottom: 18px; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+                            td { padding: 8px; border: 1px solid #ddd; vertical-align: top; }
+                            .label { width: 35%; font-weight: 600; background: #f7f7f7; }
+                            .amount { font-size: 20px; font-weight: 700; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <img class="logo" src="${companyLogo}" alt="MG Brush ERP Logo" />
+                            <div>
+                                <p class="company">MG Brush ERP</p>
+                                <div class="muted">Generated from MG Brush ERP</div>
+                            </div>
+                        </div>
+
+                        <h2>Sales Payment Receipt</h2>
+
+                        <table>
+                            <tr><td class="label">Receipt No</td><td>${receipt.receipt_no || "-"}</td></tr>
+                            <tr><td class="label">Payment Date</td><td>${receipt.payment_date || "-"}</td></tr>
+                            <tr><td class="label">Customer</td><td>${receipt.customer_name || "-"}</td></tr>
+                            <tr><td class="label">Sales No</td><td>${receipt.sales_no || "-"}</td></tr>
+                            <tr><td class="label">Invoice No</td><td>${receipt.invoice_no || "-"}</td></tr>
+                            <tr><td class="label">Payment Mode</td><td>${receipt.payment_mode || "-"}</td></tr>
+                            <tr><td class="label">Reference</td><td>${receipt.reference_no || "-"}</td></tr>
+                            <tr><td class="label">Amount</td><td class="amount">₹ ${Number(receipt.amount || 0).toFixed(2)}</td></tr>
+                            <tr><td class="label">Remarks</td><td>${receipt.remarks || "-"}</td></tr>
+                        </table>
+                    </body>
+                </html>
+            `;
+
+            printWindow.document.open();
+            printWindow.document.write(receiptHtml);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+
+        }
+        catch (err) {
+
+            console.error(err);
+
+            alert(err.response?.data?.detail || "Unable to print payment receipt.");
 
         }
 
@@ -684,6 +766,7 @@ export default function SalesView() {
                                     <th align="left">Mode</th>
                                     <th align="left">Reference</th>
                                     <th align="left">Remarks</th>
+                                    <th align="center">Print</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -695,6 +778,15 @@ export default function SalesView() {
                                         <td>{entry.payment_mode || "-"}</td>
                                         <td>{entry.reference_no || "-"}</td>
                                         <td>{entry.remarks || "-"}</td>
+                                        <td align="center">
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handlePrintPaymentReceipt(entry.payment_id)}
+                                                aria-label="Print receipt"
+                                            >
+                                                <PrintIcon fontSize="small" />
+                                            </IconButton>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

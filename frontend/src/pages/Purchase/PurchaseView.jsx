@@ -8,14 +8,19 @@ import {
     Box,
     Button,
     Divider,
-    CircularProgress
+    CircularProgress,
+    IconButton
 } from "@mui/material";
+
+import PrintIcon from "@mui/icons-material/Print";
 
 import {
     DataGrid
 } from "@mui/x-data-grid";
 
 import MainLayout from "../../layouts/MainLayout";
+
+import companyLogo from "../../assets/selvi_brush_logo.png";
 
 import {
     getPurchase
@@ -64,6 +69,66 @@ export default function PurchaseView() {
         }
 
     };
+
+    const handlePrintReceipt = (payment) => {
+
+        const printWindow = window.open("", "_blank", "width=900,height=700");
+
+        if (!printWindow) {
+            alert("Popup blocked. Please allow popups to print receipt.");
+            return;
+        }
+
+        const receiptHtml = `
+            <html>
+                <head>
+                    <title>Purchase Payment Receipt</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
+                        .header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+                        .logo { width: 64px; height: 64px; object-fit: contain; }
+                        .company { font-size: 24px; font-weight: 700; margin: 0; }
+                        h2 { margin-bottom: 8px; }
+                        .muted { color: #666; margin-bottom: 18px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+                        td { padding: 8px; border: 1px solid #ddd; vertical-align: top; }
+                        .label { width: 35%; font-weight: 600; background: #f7f7f7; }
+                        .amount { font-size: 20px; font-weight: 700; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <img class="logo" src="${companyLogo}" alt="MG Brush ERP Logo" />
+                        <div>
+                            <p class="company">MG Brush ERP</p>
+                            <div class="muted">Generated from MG Brush ERP</div>
+                        </div>
+                    </div>
+
+                    <h2>Purchase Payment Receipt</h2>
+
+                    <table>
+                        <tr><td class="label">Receipt No</td><td>${payment.receipt_no || "-"}</td></tr>
+                        <tr><td class="label">Payment Date</td><td>${payment.payment_date || "-"}</td></tr>
+                        <tr><td class="label">Supplier</td><td>${purchase?.supplier_name || "-"}</td></tr>
+                        <tr><td class="label">Purchase No</td><td>${purchase?.purchase_no || "-"}</td></tr>
+                        <tr><td class="label">Invoice No</td><td>${purchase?.invoice_no || "-"}</td></tr>
+                        <tr><td class="label">Payment Mode</td><td>${payment.payment_mode || "-"}</td></tr>
+                        <tr><td class="label">Reference</td><td>${payment.reference_no || "-"}</td></tr>
+                        <tr><td class="label">Amount</td><td class="amount">₹ ${Number(payment.amount || 0).toFixed(2)}</td></tr>
+                        <tr><td class="label">Remarks</td><td>${payment.remarks || "-"}</td></tr>
+                    </table>
+                </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(receiptHtml);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+
+    };
         //---------------------------------------------------------
     // Grid Columns
     //---------------------------------------------------------
@@ -81,6 +146,12 @@ export default function PurchaseView() {
             headerName: "Item",
             flex: 1,
             minWidth: 220
+        },
+
+        {
+            field: "item_spec",
+            headerName: "Size / Type",
+            width: 150
         },
 
         {
@@ -176,6 +247,65 @@ export default function PurchaseView() {
     // UI
     //---------------------------------------------------------
 
+    const paymentColumns = [
+
+        {
+            field: "receipt_no",
+            headerName: "Receipt No",
+            width: 160
+        },
+
+        {
+            field: "payment_date",
+            headerName: "Date",
+            width: 130
+        },
+
+        {
+            field: "amount",
+            headerName: "Amount",
+            width: 120,
+            type: "number"
+        },
+
+        {
+            field: "payment_mode",
+            headerName: "Mode",
+            width: 120
+        },
+
+        {
+            field: "reference_no",
+            headerName: "Reference",
+            width: 140
+        },
+
+        {
+            field: "remarks",
+            headerName: "Remarks",
+            flex: 1,
+            minWidth: 180
+        },
+
+        {
+            field: "print",
+            headerName: "Print",
+            width: 90,
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => (
+                <IconButton
+                    size="small"
+                    onClick={() => handlePrintReceipt(params.row)}
+                    aria-label="Print receipt"
+                >
+                    <PrintIcon fontSize="small" />
+                </IconButton>
+            )
+        }
+
+    ];
+
     return (
 
         <MainLayout>
@@ -257,7 +387,7 @@ export default function PurchaseView() {
                         </Typography>
 
                         <Typography>
-                            {purchase.supplier_name}
+                            {purchase.supplier_name || "-"}
                         </Typography>
                     </Grid>
 
@@ -267,7 +397,7 @@ export default function PurchaseView() {
                         </Typography>
 
                         <Typography>
-                            {purchase.invoice_no}
+                            {purchase.invoice_no || "-"}
                         </Typography>
                     </Grid>
 
@@ -365,6 +495,38 @@ export default function PurchaseView() {
                         </Typography>
 
                     </Box>
+
+                </Box>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Typography
+                    variant="h6"
+                    mb={2}
+                >
+                    Payment History
+                </Typography>
+
+                <Box
+                    sx={{
+                        height: 260,
+                        width: "100%"
+                    }}
+                >
+
+                    <DataGrid
+
+                        rows={purchase.payments || []}
+
+                        columns={paymentColumns}
+
+                        getRowId={(row) => row.payment_id}
+
+                        hideFooter
+
+                        disableRowSelectionOnClick
+
+                    />
 
                 </Box>
 

@@ -55,24 +55,6 @@ export default function PurchaseHeader({
 
                     fullWidth
 
-                    label="Purchase No"
-
-                    name="purchase_no"
-
-                    value={purchase.purchase_no}
-
-                    disabled
-
-                />
-
-            </Grid>
-
-            <Grid size={{ xs:12, md:3 }}>
-
-                <TextField
-
-                    fullWidth
-
                     type="date"
 
                     label="Purchase Date"
@@ -139,24 +121,6 @@ export default function PurchaseHeader({
 
                     fullWidth
 
-                    label="Invoice No"
-
-                    name="invoice_no"
-
-                    value={purchase.invoice_no}
-
-                    onChange={onChange}
-
-                />
-
-            </Grid>
-
-            <Grid size={{ xs:12, md:4 }}>
-
-                <TextField
-
-                    fullWidth
-
                     type="date"
 
                     label="Invoice Date"
@@ -170,42 +134,6 @@ export default function PurchaseHeader({
                     InputLabelProps={{
                         shrink: true
                     }}
-
-                />
-
-            </Grid>
-
-            <Grid size={{ xs:12, md:3 }}>
-
-                <TextField
-
-                    fullWidth
-
-                    label="Paid Amount"
-
-                    name="paid_amount"
-
-                    value={purchase.paid_amount ?? 0}
-
-                    disabled
-
-                />
-
-            </Grid>
-
-            <Grid size={{ xs:12, md:3 }}>
-
-                <TextField
-
-                    fullWidth
-
-                    label="Pending Amount"
-
-                    name="pending_amount"
-
-                    value={purchase.pending_amount ?? 0}
-
-                    disabled
 
                 />
 

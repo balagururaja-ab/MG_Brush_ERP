@@ -18,6 +18,7 @@ import StockLedger from "./pages/Stock/StockLedger";
 import ItemLedger from "./pages/Stock/ItemLedger";
 import OpeningStock from "./pages/Stock/OpeningStock";
 import LowStock from "./pages/Stock/LowStock";
+import MaterialIssue from "./pages/Stock/MaterialIssue";
 import OrderList from "./pages/Order/OrderList";
 import OrderEntry from "./pages/Order/OrderEntry";
 import OrderView from "./pages/Order/OrderView";
@@ -83,6 +84,11 @@ function App() {
                 <Route
                     path="/stock/low-stock"
                     element={<LowStock />}
+                />
+
+                <Route
+                    path="/stock/material-issue"
+                    element={<MaterialIssue />}
                 />
 
                 <Route

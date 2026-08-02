@@ -331,7 +331,8 @@ export default function StockSummary() {
 
                                 </TableHead>
 
-                                <TableBody>                                {
+                                <TableBody>
+                                {
 
                                     filteredStocks.length > 0 ?
 

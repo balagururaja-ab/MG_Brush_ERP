@@ -179,6 +179,22 @@ def record_payment(sales_id: int, request: SalesPayment):
 
 
 # ---------------------------------------------------------
+# Get Payment Receipt
+# ---------------------------------------------------------
+
+@router.get("/{sales_id}/payment/{payment_id}")
+def get_payment_receipt(sales_id: int, payment_id: int):
+    try:
+        return service.get_sales_payment_receipt(sales_id, payment_id)
+
+    except ValueError as ex:
+        raise HTTPException(
+            status_code=404,
+            detail=str(ex)
+        )
+
+
+# ---------------------------------------------------------
 # Customer Outstanding Balance
 # ---------------------------------------------------------
 

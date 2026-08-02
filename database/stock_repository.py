@@ -13,6 +13,32 @@ from database.constants import Tables
 class StockRepository(BaseRepository):
 
     # ---------------------------------------------------------
+    # Check Production Posting Exists
+    # ---------------------------------------------------------
+
+    def has_production_posting(
+        self,
+        production_id: int,
+        production_no: str
+    ) -> bool:
+
+        sql = f"""
+        SELECT COUNT(1) AS row_count
+        FROM {Tables.STOCK_LEDGER}
+        WHERE
+            reference_id = %s
+            AND reference_no = %s
+            AND remarks IN (
+                'Production RM Consumption',
+                'Production FG Receipt'
+            )
+        """
+
+        row = self.fetch_one(sql, [production_id, production_no])
+
+        return bool(row and int(row["row_count"]) > 0)
+
+    # ---------------------------------------------------------
     # Create Stock Ledger Entry
     # ---------------------------------------------------------
 

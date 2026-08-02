@@ -16,7 +16,6 @@ export default function PurchaseSummary({ items }) {
     const totals = useMemo(() => {
 
         let subtotal = 0;
-        let discount = 0;
         let taxable = 0;
         let cgst = 0;
         let sgst = 0;
@@ -29,27 +28,18 @@ export default function PurchaseSummary({ items }) {
 
             const rate = Number(item.rate || 0);
 
-            const discountPercent = Number(
-                item.discount_percent || 0
-            );
-
             const taxPercent = Number(
-                item.tax_percent || 0
+                item.tax_percent ?? 0
             );
 
             const lineTotal = qty * rate;
 
-            const discountAmount =
-                lineTotal * discountPercent / 100;
-
-            const taxableAmount =
-                lineTotal - discountAmount;
+            const taxableAmount = lineTotal;
 
             const gst =
                 taxableAmount * taxPercent / 100;
 
             subtotal += lineTotal;
-            discount += discountAmount;
             taxable += taxableAmount;
 
             cgst += gst / 2;
@@ -62,8 +52,6 @@ export default function PurchaseSummary({ items }) {
         return {
 
             subtotal: subtotal.toFixed(2),
-
-            discount: discount.toFixed(2),
 
             taxable: taxable.toFixed(2),
 
@@ -99,17 +87,6 @@ export default function PurchaseSummary({ items }) {
                         fullWidth
                         label="Subtotal"
                         value={totals.subtotal}
-                        InputProps={{
-                            readOnly: true
-                        }}
-                    />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                    <TextField
-                        fullWidth
-                        label="Discount"
-                        value={totals.discount}
                         InputProps={{
                             readOnly: true
                         }}

@@ -66,6 +66,24 @@ export const updatePurchase = async (
 };
 
 //--------------------------------------
+// Record Purchase Payment
+//--------------------------------------
+
+export const recordPurchasePayment = async (
+    purchaseId,
+    payment
+) => {
+
+    const response = await apiClient.post(
+        `/purchases/${purchaseId}/payment`,
+        payment
+    );
+
+    return response.data;
+
+};
+
+//--------------------------------------
 // Delete Purchase
 //--------------------------------------
 

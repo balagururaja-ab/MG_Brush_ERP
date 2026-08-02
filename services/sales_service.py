@@ -389,6 +389,11 @@ class SalesService:
         if amount <= 0:
             raise ValueError("Payment amount must be greater than zero.")
 
+        payment_date = payment.get("payment_date") or date.today()
+        sales_date = sales.get("sales_date")
+        if sales_date and payment_date < sales_date:
+            raise ValueError("Payment date cannot be before sales date.")
+
         paid_amount = round(float(sales.get("paid_amount", 0)) + amount, 2)
         grand_total = float(sales.get("grand_total", 0))
         pending_amount = round(max(grand_total - paid_amount, 0), 2)
@@ -408,7 +413,7 @@ class SalesService:
         payment_result = self.repo.apply_payment(
             sales_id,
             {
-                "payment_date": payment["payment_date"],
+                "payment_date": payment_date,
                 "amount": amount,
                 "payment_mode": payment.get("payment_mode"),
                 "reference_no": payment.get("reference_no"),
@@ -421,6 +426,28 @@ class SalesService:
             **update_data,
             "payment_id": payment_result["payment_id"],
             "receipt_no": payment_result["receipt_no"]
+        }
+
+    def get_sales_payment_receipt(
+        self,
+        sales_id: int,
+        payment_id: int
+    ) -> dict:
+
+        sales = self.repo.get_sales_by_id(sales_id)
+        if sales is None:
+            raise ValueError("Sales entry not found.")
+
+        payment = self.repo.get_sales_payment_by_id(sales_id, payment_id)
+        if payment is None:
+            raise ValueError("Payment receipt not found.")
+
+        return {
+            "sales_id": sales_id,
+            "sales_no": sales.get("sales_no"),
+            "customer_name": sales.get("customer_name"),
+            "invoice_no": sales.get("invoice_no"),
+            **payment
         }
 
     # ---------------------------------------------------------

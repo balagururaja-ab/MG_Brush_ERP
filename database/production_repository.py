@@ -28,6 +28,25 @@ class ProductionRepository(BaseRepository):
 
         return self.fetch_one(sql, [item_id])
 
+        # ---------------------------------------------------------
+        # Get Active Items
+        # ---------------------------------------------------------
+
+        def get_active_items(self):
+
+                sql = f"""
+                SELECT
+                        i.*,
+                        c.category_name
+                FROM {Tables.ITEMS} i
+                JOIN {Tables.ITEM_CATEGORY} c
+                    ON i.category_id = c.category_id
+                WHERE i.is_active = TRUE
+                ORDER BY i.item_name
+                """
+
+                return self.fetch_all(sql)
+
     # ---------------------------------------------------------
     # Brand
     # ---------------------------------------------------------
@@ -282,9 +301,6 @@ class ProductionRepository(BaseRepository):
                 i.item_code,
                 i.item_name,
 
-                d.brush_size_id,
-                s.size_name,
-
                 d.quantity,
                 d.remarks
 
@@ -292,9 +308,6 @@ class ProductionRepository(BaseRepository):
 
                 INNER JOIN {Tables.ITEMS} i
                     ON d.item_id = i.item_id
-
-            INNER JOIN {Tables.BRUSH_SIZE_MASTER} s
-                    ON d.brush_size_id = s.brush_size_id
 
             WHERE d.production_id = %s
 

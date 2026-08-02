@@ -91,3 +91,20 @@ export const saveOpeningStock = async (
 
     return response.data;
 };
+
+
+// -----------------------------------------------------
+// Material Issue
+// -----------------------------------------------------
+
+export const saveMaterialIssue = async (
+    payload
+) => {
+
+    const response = await axios.post(
+        `${API}/material-issue`,
+        payload
+    );
+
+    return response.data;
+};

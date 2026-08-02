@@ -66,6 +66,8 @@ class Tables:
 
     SALES_PAYMENT_HISTORY = "mgbrush.sales_payment_history"
 
+    PURCHASE_PAYMENT_HISTORY = "mgbrush.purchase_payment_history"
+
     CUSTOMERS = "mgbrush.customers"
 
     STOCK_LEDGER = "mgbrush.stock_ledger"

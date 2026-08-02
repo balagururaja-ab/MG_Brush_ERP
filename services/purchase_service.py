@@ -57,7 +57,7 @@ class PurchaseService:
         items: list[dict]
     ):
 
-        item_ids=[]
+        item_keys = []
         
         if len(items) == 0:
 
@@ -74,12 +74,17 @@ class PurchaseService:
                     f"Item {item['item_id']} does not exist."
                 )
             
-            if item["item_id"] in item_ids:
+            item_key = (
+                item["item_id"],
+                str(item.get("item_spec") or "").strip()
+            )
+
+            if item_key in item_keys:
                 raise ValueError(
                     "Duplicate Item found."
                 )
 
-            item_ids.append(item["item_id"])
+            item_keys.append(item_key)
             
             if item["quantity"] <= 0:
 
@@ -117,33 +122,36 @@ class PurchaseService:
 
         for item in items:
 
-            taxable = item["quantity"] * item["rate"]
+            line_total = item["quantity"] * item["rate"]
 
-            discount = taxable * item["discount_percent"] / 100
+            discount = line_total * item.get("discount_percent", 0) / 100
 
-            taxable -= discount
+            taxable = line_total - discount
+
+            tax_percent = item.get("tax_percent", 0)
+
+            gst = taxable * tax_percent / 100
 
             item["discount_amount"] = round(discount, 2)
 
             item["taxable_amount"] = round(taxable, 2)
 
-            item["cgst_amount"] = round(taxable * 0.09, 2)
+            item["cgst_amount"] = round(gst / 2, 2)
 
-            item["sgst_amount"] = round(taxable * 0.09, 2)
+            item["sgst_amount"] = round(gst / 2, 2)
 
             item["igst_amount"] = 0
 
             item["total_amount"] = round(
 
                 taxable +
-                item["cgst_amount"] +
-                item["sgst_amount"],
+                gst,
 
                 2
 
             )
 
-            subtotal += taxable
+            subtotal += line_total
 
             cgst += item["cgst_amount"]
 
@@ -152,6 +160,10 @@ class PurchaseService:
             igst += item["igst_amount"]
 
             grand_total += item["total_amount"]
+
+        taxable_amount = subtotal - sum(
+            item["discount_amount"] for item in items
+        )
 
         return {
 
@@ -162,7 +174,7 @@ class PurchaseService:
                 2
             ),
 
-            "taxable_amount": round(subtotal, 2),
+            "taxable_amount": round(taxable_amount, 2),
 
             "cgst_amount": round(cgst, 2),
 
@@ -381,6 +393,131 @@ class PurchaseService:
 
         return self.repo.list_purchases()
 
+    # ---------------------------------------------------------
+    # Get Purchase Items
+    # ---------------------------------------------------------
+
+    def get_purchase_items(self, purchase_id: int):
+
+        return self.repo.get_purchase_items(purchase_id)
+
+    # ---------------------------------------------------------
+    # Get Purchase Payment History
+    # ---------------------------------------------------------
+
+    def get_purchase_payment_history(self, purchase_id: int):
+
+        return self.repo.get_purchase_payment_history(purchase_id)
+
+    def get_purchase_payment_receipt(
+        self,
+        purchase_id: int,
+        payment_id: int
+    ) -> dict:
+
+        purchase = self.repo.get_purchase_by_id(purchase_id)
+
+        if purchase is None:
+            raise ValueError("Purchase not found.")
+
+        payment = self.repo.get_purchase_payment_by_id(purchase_id, payment_id)
+
+        if payment is None:
+            raise ValueError("Payment receipt not found.")
+
+        return {
+            "purchase_id": purchase_id,
+            "purchase_no": purchase.get("purchase_no"),
+            "supplier_name": purchase.get("supplier_name"),
+            "invoice_no": purchase.get("invoice_no"),
+            **payment
+        }
+
+    # ---------------------------------------------------------
+    # Record Purchase Payment
+    # ---------------------------------------------------------
+
+    def record_payment(
+        self,
+        purchase_id: int,
+        payment: dict
+    ) -> dict:
+
+        purchase = self.repo.get_purchase_by_id(purchase_id)
+
+        if purchase is None:
+            raise ValueError("Purchase not found.")
+
+        amount = float(payment.get("amount", 0))
+
+        if amount <= 0:
+            raise ValueError("Payment amount must be greater than zero.")
+
+        payment_date = payment.get("payment_date") or date.today()
+
+        purchase_date = purchase.get("purchase_date")
+
+        if purchase_date and payment_date < purchase_date:
+            raise ValueError("Payment date cannot be before purchase date.")
+
+        existing_payments = self.repo.get_purchase_payment_history(purchase_id)
+
+        already_paid = round(
+            sum(float(row.get("amount", 0)) for row in existing_payments),
+            2
+        )
+
+        grand_total = float(purchase.get("grand_total", 0))
+
+        current_pending = round(
+            max(grand_total - already_paid, 0),
+            2
+        )
+
+        if current_pending <= 0:
+            raise ValueError("This purchase is already fully paid.")
+
+        if amount > current_pending:
+            raise ValueError(
+                f"Payment amount cannot exceed pending amount ({current_pending:.2f})."
+            )
+
+        paid_amount = round(
+            already_paid + amount,
+            2
+        )
+
+        pending_amount = round(max(grand_total - paid_amount, 0), 2)
+
+        if paid_amount <= 0:
+            payment_status = "PENDING"
+        elif pending_amount == 0:
+            payment_status = "PAID"
+        else:
+            payment_status = "PARTIAL"
+
+        payment_result = self.repo.apply_purchase_payment(
+            purchase_id,
+            {
+                "payment_date": payment_date,
+                "amount": amount,
+                "payment_mode": payment.get("payment_mode"),
+                "reference_no": payment.get("reference_no"),
+                "remarks": payment.get("remarks")
+            },
+            {
+                "payment_status": payment_status
+            }
+        )
+
+        return {
+            "payment_id": payment_result["payment_id"],
+            "receipt_no": payment_result["receipt_no"],
+            "payment_status": payment_status,
+            "paid_amount": paid_amount,
+            "pending_amount": pending_amount
+        }
+
 
     # ---------------------------------------------------------
     # Get Purchase
@@ -398,9 +535,8 @@ class PurchaseService:
                 "Purchase not found."
             )
 
-        purchase["items"] = self.repo.get_purchase_items(
-            purchase_id
-        )
+        purchase["items"] = self.get_purchase_items(purchase_id)
+        purchase["payments"] = self.get_purchase_payment_history(purchase_id)
 
         return purchase
     

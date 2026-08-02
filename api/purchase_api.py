@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException
 
 from schemas.purchase_schema import (
     PurchaseCreate,
-    PurchaseUpdate
+    PurchaseUpdate,
+    PurchasePayment
 )
 
 from services.purchase_service import PurchaseService
@@ -30,22 +31,16 @@ def get_all():
 @router.get("/{purchase_id}")
 def get_purchase(purchase_id: int):
 
-    purchase = service.get_purchase(purchase_id)
+    try:
 
-    if purchase is None:
+        return service.get_purchase(purchase_id)
+
+    except ValueError as ex:
 
         raise HTTPException(
             status_code=404,
-            detail="Purchase not found."
+            detail=str(ex)
         )
-
-    items = service.get_purchase_items(
-        purchase_id
-    )
-
-    purchase["items"] = items
-
-    return purchase
 
 
 # ---------------------------------------------------------
@@ -144,6 +139,61 @@ def delete_purchase(
             "Purchase deleted successfully."
 
         }
+
+    except ValueError as ex:
+
+        raise HTTPException(
+            status_code=404,
+            detail=str(ex)
+        )
+
+
+# ---------------------------------------------------------
+# Record Payment
+# ---------------------------------------------------------
+
+@router.post("/{purchase_id}/payment")
+def record_payment(
+    purchase_id: int,
+    request: PurchasePayment
+):
+
+    try:
+
+        payment_data = service.record_payment(
+            purchase_id,
+            request.model_dump()
+        )
+
+        return {
+            "message": "Payment recorded successfully.",
+            "payment_summary": payment_data
+        }
+
+    except ValueError as ex:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(ex)
+        )
+
+
+# ---------------------------------------------------------
+# Get Payment Receipt
+# ---------------------------------------------------------
+
+@router.get("/{purchase_id}/payment/{payment_id}")
+def get_payment_receipt(
+    purchase_id: int,
+    payment_id: int
+):
+
+    try:
+
+        return service.get_purchase_payment_receipt(
+            purchase_id,
+            payment_id
+        )
 
     except ValueError as ex:
 

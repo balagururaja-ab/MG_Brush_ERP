@@ -12,6 +12,15 @@ from database.constants import Tables
 
 class PurchaseRepository(BaseRepository):
 
+    PURCHASE_PAYMENT_COLUMNS = {
+        "purchase_id",
+        "payment_date",
+        "amount",
+        "payment_mode",
+        "reference_no",
+        "remarks",
+    }
+
     def create_purchase(self, purchase: dict) -> int:
 
         return self.insert(
@@ -22,10 +31,17 @@ class PurchaseRepository(BaseRepository):
 
     def get_purchase_by_id(self, purchase_id: int):
 
-        return self.find_one(
-            Tables.PURCHASE_HEADER,
-            {"purchase_id": purchase_id}
-        )
+        sql = f"""
+            SELECT
+                ph.*, 
+                s.supplier_name
+            FROM {Tables.PURCHASE_HEADER} ph
+            LEFT JOIN {Tables.SUPPLIERS} s
+                ON ph.supplier_id = s.supplier_id
+            WHERE ph.purchase_id = %s
+        """
+
+        return self.fetch_one(sql, (purchase_id,))
 
     def list_purchases(self) -> list[dict]:
 
@@ -102,6 +118,145 @@ class PurchaseRepository(BaseRepository):
             """
 
         return self.fetch_all(sql, (purchase_id,))
+
+    def get_purchase_payment_history(
+        self,
+        purchase_id: int
+    ) -> list[dict]:
+
+        sql = f"""
+            SELECT
+                payment_id,
+                purchase_id,
+                receipt_no,
+                payment_date,
+                amount,
+                payment_mode,
+                reference_no,
+                remarks,
+                created_at
+            FROM {Tables.PURCHASE_PAYMENT_HISTORY}
+            WHERE purchase_id = %s
+            ORDER BY payment_date DESC, payment_id DESC
+        """
+
+        try:
+            return self.fetch_all(sql, (purchase_id,))
+        except Exception as exc:
+            if "purchase_payment_history" in str(exc):
+                return []
+            raise
+
+    def get_purchase_payment_by_id(
+        self,
+        purchase_id: int,
+        payment_id: int
+    ) -> dict | None:
+
+        sql = f"""
+            SELECT
+                payment_id,
+                purchase_id,
+                receipt_no,
+                payment_date,
+                amount,
+                payment_mode,
+                reference_no,
+                remarks,
+                created_at
+            FROM {Tables.PURCHASE_PAYMENT_HISTORY}
+            WHERE purchase_id = %s
+              AND payment_id = %s
+        """
+
+        return self.fetch_one(sql, (purchase_id, payment_id))
+
+    def apply_purchase_payment(
+        self,
+        purchase_id: int,
+        payment_entry: dict,
+        payment_update: dict
+    ):
+
+        self._ensure_connection()
+
+        insert_sql = f"""
+            INSERT INTO {Tables.PURCHASE_PAYMENT_HISTORY}
+            (
+                purchase_id,
+                payment_date,
+                amount,
+                payment_mode,
+                reference_no,
+                remarks
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING payment_id
+        """
+
+        update_receipt_sql = f"""
+            UPDATE {Tables.PURCHASE_PAYMENT_HISTORY}
+            SET receipt_no = %s
+            WHERE payment_id = %s
+        """
+
+        update_columns = list(payment_update.keys())
+        set_clause = ", ".join(
+            f"{column} = %s"
+            for column in update_columns
+        )
+
+        update_sql = f"""
+            UPDATE {Tables.PURCHASE_HEADER}
+            SET {set_clause}
+            WHERE purchase_id = %s
+        """
+
+        try:
+            with self.conn.cursor() as cursor:
+                cursor.execute(
+                    insert_sql,
+                    [
+                        purchase_id,
+                        payment_entry.get("payment_date"),
+                        payment_entry.get("amount"),
+                        payment_entry.get("payment_mode"),
+                        payment_entry.get("reference_no"),
+                        payment_entry.get("remarks")
+                    ]
+                )
+
+                payment_row = cursor.fetchone()
+                payment_id = payment_row.get("payment_id")
+                receipt_no = (
+                    f"PRCPT-{payment_id:06d}"
+                )
+
+                cursor.execute(
+                    update_receipt_sql,
+                    [
+                        receipt_no,
+                        payment_id
+                    ]
+                )
+
+                update_values = [
+                    payment_update[column]
+                    for column in update_columns
+                ] + [purchase_id]
+
+                cursor.execute(update_sql, update_values)
+
+                self.conn.commit()
+
+                return {
+                    "payment_id": payment_id,
+                    "receipt_no": receipt_no
+                }
+
+        except Exception:
+            self.rollback()
+            raise
     
     def update_purchase_item(
         self,

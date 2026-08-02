@@ -20,6 +20,8 @@ class PurchaseItem(BaseModel):
     discount_percent: Decimal = 0
 
     tax_id: Optional[int] = None
+    item_spec: Optional[str] = None
+    tax_percent: Decimal = 18
 
     discount_amount: Decimal = 0
     taxable_amount: Decimal = 0
@@ -58,6 +60,19 @@ class PurchaseCreate(BaseModel):
 
 class PurchaseUpdate(PurchaseCreate):
     pass
+
+
+class PurchasePayment(BaseModel):
+
+    payment_date: Optional[date] = None
+
+    amount: Decimal
+
+    payment_mode: Optional[str] = None
+
+    reference_no: Optional[str] = None
+
+    remarks: Optional[str] = None
 
 
 # ---------------------------------------------------------

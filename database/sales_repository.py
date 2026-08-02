@@ -157,6 +157,30 @@ class SalesRepository(BaseRepository):
                 return []
             raise
 
+    def get_sales_payment_by_id(
+        self,
+        sales_id: int,
+        payment_id: int
+    ) -> dict | None:
+
+        sql = f"""
+            SELECT
+                payment_id,
+                sales_id,
+                receipt_no,
+                payment_date,
+                amount,
+                payment_mode,
+                reference_no,
+                remarks,
+                created_at
+            FROM {Tables.SALES_PAYMENT_HISTORY}
+            WHERE sales_id = %s
+              AND payment_id = %s
+        """
+
+        return self.fetch_one(sql, [sales_id, payment_id])
+
     # ---------------------------------------------------------
     # List Sales
     # ---------------------------------------------------------

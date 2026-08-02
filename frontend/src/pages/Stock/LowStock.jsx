@@ -303,7 +303,7 @@ export default function LowStock() {
                                 </TableHead>
 
                                 <TableBody>
-                                                                    {
+                                    {
 
                                     filteredStocks.length > 0 ?
 

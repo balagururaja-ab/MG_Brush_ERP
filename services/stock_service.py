@@ -10,6 +10,7 @@ Adjustment-> Manual Adjustment
 """
 
 from database.stock_repository import StockRepository
+from datetime import date
 
 
 class StockService:
@@ -109,6 +110,95 @@ class StockService:
             quantity=float(item["quantity"])
 
         )
+
+    # ---------------------------------------------------------
+    # Production Stock
+    # ---------------------------------------------------------
+
+    def production_stock(
+        self,
+        production_id: int,
+        production_no: str,
+        rm_items: list[dict],
+        fg_items: list[dict],
+        consume_rm: bool = False
+    ):
+
+        if consume_rm:
+
+            for item in rm_items:
+
+                self.repo.create_stock_ledger(
+
+                    {
+
+                        "transaction_type": "ADJUSTMENT",
+
+                        "reference_id": production_id,
+
+                        "reference_no": production_no,
+
+                        "item_id": item["item_id"],
+
+                        "warehouse": "MAIN",
+
+                        "qty_in": 0,
+
+                        "qty_out": item["quantity"],
+
+                        "unit_cost": 0,
+
+                        "remarks": "Production RM Consumption"
+
+                    }
+
+                )
+
+                self.repo.decrease_stock(
+
+                    item_id=item["item_id"],
+
+                    quantity=float(item["quantity"])
+
+                )
+
+        for item in fg_items:
+
+            self.repo.create_stock_ledger(
+
+                {
+
+                    "transaction_type": "ADJUSTMENT",
+
+                    "reference_id": production_id,
+
+                    "reference_no": production_no,
+
+                    "item_id": item["item_id"],
+
+                    "warehouse": "MAIN",
+
+                    "qty_in": item["quantity"],
+
+                    "qty_out": 0,
+
+                    "unit_cost": 0,
+
+                    "remarks": "Production FG Receipt"
+
+                }
+
+            )
+
+            self.repo.increase_stock(
+
+                item_id=item["item_id"],
+
+                quantity=float(item["quantity"]),
+
+                unit_cost=0
+
+            )
 
     # ---------------------------------------------------------
     # Opening Stock
@@ -232,6 +322,54 @@ class StockService:
 
             }
 
+        )
+
+    # ---------------------------------------------------------
+    # Material Issue (Raw Material Consumption)
+    # ---------------------------------------------------------
+
+    def material_issue(
+        self,
+        item_id: int,
+        quantity: float,
+        issue_date: date,
+        batch_no: str | None,
+        remarks: str | None
+    ):
+
+        if quantity <= 0:
+            raise ValueError("Issue quantity must be greater than zero.")
+
+        item_stock = self.repo.get_current_stock(item_id)
+        available_qty = float(item_stock["current_qty"]) if item_stock else 0
+
+        if available_qty < quantity:
+            raise ValueError(
+                f"Insufficient stock. Available: {available_qty}, Requested: {quantity}"
+            )
+
+        final_remarks = "Material Issue"
+        if remarks:
+            final_remarks = f"Material Issue - {remarks}"
+
+        self.repo.create_stock_ledger(
+            {
+                "transaction_date": issue_date,
+                "transaction_type": "ADJUSTMENT",
+                "reference_id": None,
+                "reference_no": batch_no or "MATERIAL_ISSUE",
+                "item_id": item_id,
+                "warehouse": "MAIN",
+                "qty_in": 0,
+                "qty_out": quantity,
+                "unit_cost": 0,
+                "remarks": final_remarks
+            }
+        )
+
+        self.repo.decrease_stock(
+            item_id=item_id,
+            quantity=quantity
         )
 
     # ---------------------------------------------------------

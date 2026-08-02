@@ -107,7 +107,7 @@ const ProductionEntry = () => {
 
             .substring(0, 10),
 
-        status: "COMPLETED",
+        status: "DRAFT",
 
         remarks: ""
 
@@ -225,11 +225,18 @@ const ProductionEntry = () => {
 
             const data = await getProduction(id);
 
-            setProduction(data.production);
+            const header = data.production || data;
 
-            setRmItems(data.rm_items);
+            setProduction({
+                production_no: header?.production_no || "",
+                production_date: header?.production_date || new Date().toISOString().substring(0, 10),
+                status: header?.status || "DRAFT",
+                remarks: header?.remarks || ""
+            });
 
-            setFgItems(data.fg_items);
+            setRmItems(data.rm_items || []);
+
+            setFgItems(data.fg_items || []);
 
         }
 
@@ -394,13 +401,21 @@ const ProductionEntry = () => {
 
             setLoading(true);
 
+            const normalizedRmItems = rmItems.filter(
+                (row) => row.item_id && row.quantity !== "" && row.quantity !== null
+            );
+
+            const normalizedFgItems = fgItems.filter(
+                (row) => row.item_id && row.quantity !== "" && row.quantity !== null
+            );
+
             const payload = {
 
                 production,
 
-                rm_items: rmItems,
+                rm_items: normalizedRmItems,
 
-                fg_items: fgItems
+                fg_items: normalizedFgItems
 
             };
 
@@ -655,7 +670,7 @@ const ProductionEntry = () => {
                     gutterBottom
                 >
 
-                    Raw Materials
+                    Raw Materials (Optional)
 
                 </Typography>
 

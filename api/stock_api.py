@@ -3,6 +3,7 @@ Stock API
 """
 
 from fastapi import APIRouter, HTTPException
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -20,6 +21,19 @@ class OpeningStockRequest(BaseModel):
     quantity: float
 
     rate: float
+
+
+class MaterialIssueRequest(BaseModel):
+
+    item_id: int
+
+    quantity: float
+
+    issue_date: date
+
+    batch_no: str | None = None
+
+    remarks: str | None = None
 
 # ---------------------------------------------------------
 # Stock Summary
@@ -106,5 +120,36 @@ def opening_stock(
         "message": "Opening stock saved successfully."
 
     }
+
+
+# ---------------------------------------------------------
+# Material Issue
+# ---------------------------------------------------------
+
+@router.post("/material-issue")
+def material_issue(
+    request: MaterialIssueRequest
+):
+
+    try:
+
+        service.material_issue(
+            item_id=request.item_id,
+            quantity=request.quantity,
+            issue_date=request.issue_date,
+            batch_no=request.batch_no,
+            remarks=request.remarks
+        )
+
+        return {
+            "message": "Material issue recorded successfully."
+        }
+
+    except ValueError as ex:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(ex)
+        )
 
 

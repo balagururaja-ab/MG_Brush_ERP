@@ -25,6 +25,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import LayersClearIcon from "@mui/icons-material/LayersClear";
 
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 
@@ -75,6 +76,16 @@ export default function StockDashboard() {
             icon: <WarningAmberIcon sx={{ fontSize: 50 }} />,
 
             path: "/stock/low-stock"
+
+        },
+
+        {
+
+            title: "Material Issue",
+
+            icon: <LayersClearIcon sx={{ fontSize: 50 }} />,
+
+            path: "/stock/material-issue"
 
         },
 

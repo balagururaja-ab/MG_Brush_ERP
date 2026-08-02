@@ -428,7 +428,7 @@ export default function StockLedger() {
                                 </TableHead>
 
                                 <TableBody>
-                                                                  {
+                                    {
 
                                     filteredLedger.length > 0 ?
 
