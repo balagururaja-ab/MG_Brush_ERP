@@ -401,10 +401,6 @@ const ProductionEntry = () => {
 
             setLoading(true);
 
-            const normalizedRmItems = rmItems.filter(
-                (row) => row.item_id && row.quantity !== "" && row.quantity !== null
-            );
-
             const normalizedFgItems = fgItems.filter(
                 (row) => row.item_id && row.quantity !== "" && row.quantity !== null
             );
@@ -413,7 +409,7 @@ const ProductionEntry = () => {
 
                 production,
 
-                rm_items: normalizedRmItems,
+                rm_items: [],
 
                 fg_items: normalizedFgItems
 
@@ -522,31 +518,7 @@ const ProductionEntry = () => {
                     spacing={2}
                 >
 
-                    <Grid size={{ xs: 12, md: 3 }}>
-
-                        <TextField
-
-                            fullWidth
-
-                            label="Production No"
-
-                            value={
-
-                                production.production_no || ""
-
-                            }
-
-                            InputProps={{
-
-                                readOnly: true
-
-                            }}
-
-                        />
-
-                    </Grid>
-
-                    <Grid size={{ xs: 12, md: 3 }}>
+                    <Grid size={{ xs: 12, md: 4 }}>
 
                         <TextField
 
@@ -580,7 +552,7 @@ const ProductionEntry = () => {
 
                     </Grid>
 
-                    <Grid size={{ xs: 12, md: 3 }}>
+                    <Grid size={{ xs: 12, md: 4 }}>
 
                         <TextField
 
@@ -661,276 +633,6 @@ const ProductionEntry = () => {
                 </Grid>
 
                 <Divider sx={{ mt: 4, mb: 3 }} />
-                                {/*------------------------------------------------*/}
-                {/* Raw Materials */}
-                {/*------------------------------------------------*/}
-
-                <Typography
-                    variant="h6"
-                    gutterBottom
-                >
-
-                    Raw Materials (Optional)
-
-                </Typography>
-
-                <TableContainer
-                    component={Paper}
-                    variant="outlined"
-                >
-
-                    <Table>
-
-                        <TableHead>
-
-                            <TableRow>
-
-                                <TableCell width="45%">
-
-                                    Item
-
-                                </TableCell>
-
-                                <TableCell width="15%">
-
-                                    Quantity
-
-                                </TableCell>
-
-                                <TableCell>
-
-                                    Remarks
-
-                                </TableCell>
-
-                                <TableCell
-                                    align="center"
-                                    width="80"
-                                >
-
-                                    Action
-
-                                </TableCell>
-
-                            </TableRow>
-
-                        </TableHead>
-
-                        <TableBody>
-
-                            {
-
-                                rmItems.map(
-
-                                    (
-
-                                        row,
-
-                                        index
-
-                                    ) => (
-
-                                        <TableRow key={index}>
-
-                                            <TableCell>
-
-                                                <TextField
-
-                                                    select
-
-                                                    fullWidth
-
-                                                    size="small"
-
-                                                    value={
-
-                                                        row.item_id
-
-                                                    }
-
-                                                    onChange={(e) =>
-
-                                                        handleRmChange(
-
-                                                            index,
-
-                                                            "item_id",
-
-                                                            e.target.value
-
-                                                        )
-
-                                                    }
-
-                                                >
-
-                                                    {
-
-                                                        rawMaterialItems.map(
-
-                                                            item => (
-
-                                                                <MenuItem
-
-                                                                    key={
-
-                                                                        item.item_id
-
-                                                                    }
-
-                                                                    value={
-
-                                                                        item.item_id
-
-                                                                    }
-
-                                                                >
-
-                                                                    {
-
-                                                                        item.item_code
-
-                                                                    }
-
-                                                                    {" - "}
-
-                                                                    {
-
-                                                                        item.item_name
-
-                                                                    }
-
-                                                                </MenuItem>
-
-                                                            )
-
-                                                        )
-
-                                                    }
-
-                                                </TextField>
-
-                                            </TableCell>
-
-                                            <TableCell>
-
-                                                <TextField
-
-                                                    fullWidth
-
-                                                    size="small"
-
-                                                    type="number"
-
-                                                    value={
-
-                                                        row.quantity
-
-                                                    }
-
-                                                    onChange={(e) =>
-
-                                                        handleRmChange(
-
-                                                            index,
-
-                                                            "quantity",
-
-                                                            e.target.value
-
-                                                        )
-
-                                                    }
-
-                                                />
-
-                                            </TableCell>
-
-                                            <TableCell>
-
-                                                <TextField
-
-                                                    fullWidth
-
-                                                    size="small"
-
-                                                    value={
-
-                                                        row.remarks
-
-                                                    }
-
-                                                    onChange={(e) =>
-
-                                                        handleRmChange(
-
-                                                            index,
-
-                                                            "remarks",
-
-                                                            e.target.value
-
-                                                        )
-
-                                                    }
-
-                                                />
-
-                                            </TableCell>
-
-                                            <TableCell
-                                                align="center"
-                                            >
-
-                                                <IconButton
-                                                    color="error"
-                                                    onClick={() =>
-                                                        deleteRmRow(index)
-                                                    }
-                                                >
-
-                                                    <DeleteIcon />
-
-                                                </IconButton>
-
-                                            </TableCell>
-
-                                        </TableRow>
-
-                                    )
-
-                                )
-
-                            }
-
-                        </TableBody>
-
-                    </Table>
-
-                </TableContainer>
-
-                <Box
-                    mt={2}
-                    mb={4}
-                >
-
-                    <Button
-
-                        variant="outlined"
-
-                        startIcon={<AddIcon />}
-
-                        onClick={addRmRow}
-
-                    >
-
-                        Add Raw Material
-
-                    </Button>
-
-                </Box>
-
-                <Divider sx={{ mb: 3 }} />
                                 {/*------------------------------------------------*/}
                 {/* Finished Goods */}
                 {/*------------------------------------------------*/}

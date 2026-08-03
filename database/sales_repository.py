@@ -2,6 +2,7 @@ from datetime import datetime
 
 from database.base_repository import BaseRepository
 from database.constants import Tables
+from database.constants import FINISHED_GOOD_CATEGORIES
 
 
 class SalesRepository(BaseRepository):
@@ -480,11 +481,17 @@ class SalesRepository(BaseRepository):
         brand_name: str | None = None
     ):
 
+        category_filter = ", ".join(
+            str(category_id)
+            for category_id in sorted(FINISHED_GOOD_CATEGORIES)
+        )
+
         sql = f"""
             SELECT *
             FROM {Tables.ITEMS}
             WHERE brand_id = %s
               AND brush_size_id = %s
+              AND category_id IN ({category_filter})
             ORDER BY item_id
         """
 
@@ -502,6 +509,7 @@ class SalesRepository(BaseRepository):
                 FROM {Tables.ITEMS}
                 WHERE brush_size_id = %s
                   AND item_name ILIKE %s
+                                    AND category_id IN ({category_filter})
                 ORDER BY item_id
             """
 
@@ -517,6 +525,7 @@ class SalesRepository(BaseRepository):
             SELECT *
             FROM {Tables.ITEMS}
             WHERE brush_size_id = %s
+              AND category_id IN ({category_filter})
             ORDER BY item_id
         """
 

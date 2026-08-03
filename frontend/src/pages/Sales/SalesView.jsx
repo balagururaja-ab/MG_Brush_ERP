@@ -45,6 +45,12 @@ export default function SalesView() {
         remarks: ""
     });
 
+    const [invoiceDraft, setInvoiceDraft] = useState({
+        invoice_date: new Date().toISOString().substring(0, 10),
+        is_gst: false,
+        gst_percent: 0
+    });
+
     //---------------------------------------------------------
     // Load Sales
     //---------------------------------------------------------
@@ -63,6 +69,11 @@ export default function SalesView() {
 
             setSales(data);
             setPaymentHistory(data.payments || []);
+            setInvoiceDraft({
+                invoice_date: data.invoice_date || new Date().toISOString().substring(0, 10),
+                is_gst: Boolean(data.is_gst),
+                gst_percent: Number(data.gst_percent || 0)
+            });
 
         }
         catch (err) {
@@ -79,10 +90,15 @@ export default function SalesView() {
 
         try {
 
+            if (invoiceDraft.is_gst && Number(invoiceDraft.gst_percent || 0) <= 0) {
+                alert("Enter valid GST % for GST invoice.");
+                return;
+            }
+
             await generateSalesInvoice(sales.sales_id, {
-                invoice_date: sales.invoice_date || new Date().toISOString().substring(0, 10),
-                is_gst: sales.is_gst || false,
-                gst_percent: sales.gst_percent || 0
+                invoice_date: invoiceDraft.invoice_date,
+                is_gst: invoiceDraft.is_gst,
+                gst_percent: invoiceDraft.is_gst ? Number(invoiceDraft.gst_percent || 0) : 0
             });
 
             await loadSales();
@@ -100,6 +116,19 @@ export default function SalesView() {
 
     };
 
+    const handleInvoiceDraftChange = (e) => {
+
+        const { name, value, type } = e.target;
+
+        setInvoiceDraft((prev) => ({
+            ...prev,
+            [name]: type === "number"
+                ? Number(value)
+                : (name === "is_gst" ? value === "true" : value)
+        }));
+
+    };
+
     const handlePaymentChange = (e) => {
 
         const { name, value, type } = e.target;
@@ -114,6 +143,11 @@ export default function SalesView() {
     const handleRecordPayment = async () => {
 
         try {
+
+            if (!sales.invoice_generated) {
+                alert("Generate invoice before recording payment.");
+                return;
+            }
 
             if (!payment.amount || payment.amount <= 0) {
                 alert("Enter a valid payment amount.");
@@ -141,6 +175,118 @@ export default function SalesView() {
             alert(err.response?.data?.detail || "Unable to record payment.");
 
         }
+
+    };
+
+    const handlePrintInvoice = () => {
+
+        if (!sales.invoice_generated) {
+            alert("Generate invoice before printing.");
+            return;
+        }
+
+        const isGstInvoice = Boolean(sales.is_gst);
+        const taxable = Number(sales.taxable_amount || 0);
+        const cgst = isGstInvoice ? Number(sales.cgst_amount || 0) : 0;
+        const sgst = isGstInvoice ? Number(sales.sgst_amount || 0) : 0;
+        const igst = isGstInvoice ? Number(sales.igst_amount || 0) : 0;
+        const grandTotal = isGstInvoice
+            ? Number(sales.grand_total || 0)
+            : taxable;
+
+        const printWindow = window.open("", "_blank", "width=1000,height=760");
+        if (!printWindow) {
+            alert("Popup blocked. Please allow popups to print invoice.");
+            return;
+        }
+
+        const rowsHtml = (sales.items || []).map((item, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.item_name || "-"}</td>
+                <td style="text-align:right;">${Number(item.quantity || 0).toFixed(2)}</td>
+                <td style="text-align:right;">${Number(item.rate || 0).toFixed(2)}</td>
+                <td style="text-align:right;">${Number(item.discount_amount || 0).toFixed(2)}</td>
+                <td style="text-align:right;">${Number(item.taxable_amount || 0).toFixed(2)}</td>
+                ${isGstInvoice ? `<td style="text-align:right;">${Number(item.cgst_amount || 0).toFixed(2)}</td>` : ""}
+                ${isGstInvoice ? `<td style="text-align:right;">${Number(item.sgst_amount || 0).toFixed(2)}</td>` : ""}
+                ${isGstInvoice ? `<td style="text-align:right;">${Number(item.igst_amount || 0).toFixed(2)}</td>` : ""}
+                <td style="text-align:right; font-weight:700;">${Number(item.total_amount || 0).toFixed(2)}</td>
+            </tr>
+        `).join("");
+
+        const invoiceHtml = `
+            <html>
+                <head>
+                    <title>Sales Invoice</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; color: #222; }
+                        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+                        .logo { width: 62px; height: 62px; object-fit: contain; }
+                        .company { margin: 0; font-size: 24px; font-weight: 700; }
+                        .muted { color: #666; margin: 0; }
+                        .meta { margin-top: 12px; margin-bottom: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; font-size: 13px; }
+                        th { background: #f5f5f5; }
+                        .summary { margin-top: 14px; width: 360px; margin-left: auto; }
+                        .summary td { border: 1px solid #ddd; padding: 8px; }
+                        .summary .label { font-weight: 600; background: #f7f7f7; }
+                        .summary .total { font-size: 18px; font-weight: 700; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <img class="logo" src="${companyLogo}" alt="MG Brush ERP Logo" />
+                        <div>
+                            <p class="company">MG Brush ERP</p>
+                            <p class="muted">Sales Invoice</p>
+                        </div>
+                    </div>
+
+                    <div class="meta">
+                        <div><b>Invoice No:</b> ${sales.invoice_no || "-"}</div>
+                        <div><b>Invoice Date:</b> ${sales.invoice_date || "-"}</div>
+                        <div><b>Sales No:</b> ${sales.sales_no || "-"}</div>
+                        <div><b>Sales Date:</b> ${sales.sales_date || "-"}</div>
+                        <div><b>Customer:</b> ${sales.customer_name || "-"}</div>
+                        <div><b>GST Invoice:</b> ${isGstInvoice ? "Yes" : "No"}</div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th style="text-align:right;">Qty</th>
+                                <th style="text-align:right;">Rate</th>
+                                <th style="text-align:right;">Discount</th>
+                                <th style="text-align:right;">Taxable</th>
+                                ${isGstInvoice ? '<th style="text-align:right;">CGST</th>' : ""}
+                                ${isGstInvoice ? '<th style="text-align:right;">SGST</th>' : ""}
+                                ${isGstInvoice ? '<th style="text-align:right;">IGST</th>' : ""}
+                                <th style="text-align:right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+
+                    <table class="summary">
+                        <tr><td class="label">Taxable Amount</td><td style="text-align:right;">₹ ${taxable.toFixed(2)}</td></tr>
+                        ${isGstInvoice ? `<tr><td class="label">CGST</td><td style="text-align:right;">₹ ${cgst.toFixed(2)}</td></tr>` : ""}
+                        ${isGstInvoice ? `<tr><td class="label">SGST</td><td style="text-align:right;">₹ ${sgst.toFixed(2)}</td></tr>` : ""}
+                        ${isGstInvoice ? `<tr><td class="label">IGST</td><td style="text-align:right;">₹ ${igst.toFixed(2)}</td></tr>` : ""}
+                        <tr><td class="label total">Grand Total</td><td class="total" style="text-align:right;">₹ ${grandTotal.toFixed(2)}</td></tr>
+                    </table>
+                </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(invoiceHtml);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
 
     };
 
@@ -534,6 +680,40 @@ export default function SalesView() {
                     </Typography>
 
                     <Box>
+                        <TextField
+                            sx={{ mr: 2, minWidth: 140 }}
+                            label="Invoice Date"
+                            type="date"
+                            name="invoice_date"
+                            value={invoiceDraft.invoice_date}
+                            onChange={handleInvoiceDraftChange}
+                            InputLabelProps={{ shrink: true }}
+                            size="small"
+                            disabled={sales.invoice_generated}
+                        />
+                        <TextField
+                            sx={{ mr: 2, minWidth: 140 }}
+                            select
+                            label="GST"
+                            name="is_gst"
+                            value={invoiceDraft.is_gst ? "true" : "false"}
+                            onChange={handleInvoiceDraftChange}
+                            size="small"
+                            disabled={sales.invoice_generated}
+                        >
+                            <MenuItem value="false">Without GST</MenuItem>
+                            <MenuItem value="true">With GST</MenuItem>
+                        </TextField>
+                        <TextField
+                            sx={{ mr: 2, width: 110 }}
+                            label="GST %"
+                            type="number"
+                            name="gst_percent"
+                            value={invoiceDraft.gst_percent}
+                            onChange={handleInvoiceDraftChange}
+                            size="small"
+                            disabled={sales.invoice_generated || !invoiceDraft.is_gst}
+                        />
                         <Button
                             variant="contained"
                             color={sales.invoice_generated ? "success" : "primary"}
@@ -544,6 +724,14 @@ export default function SalesView() {
                                 ? "Invoice Generated"
                                 : "Generate Invoice"}
                         </Button>
+                        <Button
+                            variant="outlined"
+                            sx={{ ml: 2 }}
+                            onClick={handlePrintInvoice}
+                            disabled={!sales.invoice_generated}
+                        >
+                            Print Invoice
+                        </Button>
                     </Box>
                 </Box>
 
@@ -552,7 +740,7 @@ export default function SalesView() {
                     color="text.secondary"
                     gutterBottom
                 >
-                    Record a payment against this sale below.
+                    Record payment only after invoice generation.
                 </Typography>
 
                 <Grid
@@ -612,7 +800,7 @@ export default function SalesView() {
                         <Button
                             variant="contained"
                             onClick={handleRecordPayment}
-                            disabled={Number(sales.pending_amount || 0) <= 0}
+                            disabled={!sales.invoice_generated || Number(sales.pending_amount || 0) <= 0}
                         >
                             Record Payment
                         </Button>
@@ -783,6 +971,7 @@ export default function SalesView() {
                                                 size="small"
                                                 onClick={() => handlePrintPaymentReceipt(entry.payment_id)}
                                                 aria-label="Print receipt"
+                                                disabled={!sales.invoice_generated}
                                             >
                                                 <PrintIcon fontSize="small" />
                                             </IconButton>

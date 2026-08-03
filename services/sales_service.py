@@ -285,9 +285,32 @@ class SalesService:
                     if len(rate_matches) == 1:
                         item = rate_matches[0]
                     else:
-                        raise ValueError(
-                            f"Multiple items match {order_item_label or 'selected order line'}. Please edit the order and select the exact item."
-                        )
+                        brand_text = str(order_item.get("brand_name") or "").strip().lower()
+
+                        heuristic_pool = rate_matches if len(rate_matches) > 0 else candidates
+
+                        if "spl" in brand_text:
+                            spl_matches = [
+                                row for row in heuristic_pool
+                                if "spl" in str(row.get("item_name") or "").lower()
+                            ]
+                            if len(spl_matches) == 1:
+                                item = spl_matches[0]
+                        else:
+                            selvi_matches = [
+                                row for row in heuristic_pool
+                                if (
+                                    "selvi" in str(row.get("item_name") or "").lower()
+                                    and "spl" not in str(row.get("item_name") or "").lower()
+                                )
+                            ]
+                            if len(selvi_matches) == 1:
+                                item = selvi_matches[0]
+
+                        if item is None:
+                            raise ValueError(
+                                f"Multiple items match {order_item_label or 'selected order line'}. Please edit the order and select the exact item."
+                            )
 
             if item is None:
                 raise ValueError(

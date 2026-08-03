@@ -133,6 +133,12 @@ export default function StockSummary() {
 
                     ||
 
+                    item.unit_name
+                        ?.toLowerCase()
+                        .includes(keyword)
+
+                    ||
+
                     item.warehouse
                         ?.toLowerCase()
                         .includes(keyword)
@@ -197,7 +203,7 @@ export default function StockSummary() {
 
                     fullWidth
 
-                    placeholder="Search Item Code / Item Name / Warehouse"
+                    placeholder="Search Item Code / Item Name / Unit / Warehouse"
 
                     value={search}
 
@@ -281,6 +287,12 @@ export default function StockSummary() {
 
                                         </TableCell>
 
+                                        <TableCell>
+
+                                            Unit
+
+                                        </TableCell>
+
                                         <TableCell
                                             align="right"
                                         >
@@ -360,6 +372,12 @@ export default function StockSummary() {
                                                 <TableCell>
 
                                                     {row.warehouse}
+
+                                                </TableCell>
+
+                                                <TableCell>
+
+                                                    {row.unit_name || row.unit_code || "-"}
 
                                                 </TableCell>
 
@@ -485,7 +503,7 @@ export default function StockSummary() {
 
                                             <TableCell
 
-                                                colSpan={9}
+                                                colSpan={10}
 
                                                 align="center"
 

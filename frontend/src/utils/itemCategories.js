@@ -1,0 +1,1 @@
+export const FINISHED_GOOD_CATEGORIES = [23, 24];

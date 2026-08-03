@@ -330,7 +330,7 @@ class ProductionService:
     def _normalize_size_text(self, size_text: str | None) -> str | None:
 
         text = StringHelper.safe_lower(size_text)
-        match = re.search(r"(1(?:\.5)?|2(?:\.5)?|3|4)\s*inch", text)
+        match = re.search(r"(0\.5|0\.75|1(?:\.5)?|2(?:\.5)?|3|4)\s*inch", text)
 
         if not match:
             return None
@@ -436,7 +436,7 @@ class ProductionService:
                     ]
 
             elif is_selvi:
-                if size_text in {"2 inch", "2.5 inch", "3 inch", "4 inch"}:
+                if size_text in {"0.5 inch", "0.75 inch", "1 inch", "1.5 inch", "2 inch", "2.5 inch", "3 inch", "4 inch"}:
                     rules = [
                         (["ferrule"], ["s44"], f"{size_text} ferrule"),
                         (["handle", "plastic"], None, f"{size_text} plastic handle")

@@ -59,6 +59,7 @@ import {
     getBrands,
     getBrushSizes
 } from "../../api/itemApi";
+import { FINISHED_GOOD_CATEGORIES } from "../../utils/itemCategories";
 
 import AppHeader from "../../components/AppHeader";
 
@@ -123,6 +124,35 @@ export default function OrderEntry() {
     const [items, setItems] = useState([
         { ...emptyItem }
     ]);
+
+    const getItemCandidates = (row) => {
+
+        const brandId = Number(row.brand_id);
+        const brushSizeId = Number(row.brush_size_id);
+
+        if (!brushSizeId) {
+            return [];
+        }
+
+        const finishedGoods = itemsMaster.filter(
+            (masterItem) => FINISHED_GOOD_CATEGORIES.includes(Number(masterItem.category_id))
+        );
+
+        const exactMatches = finishedGoods.filter(
+            (masterItem) =>
+                Number(masterItem.brand_id) === brandId
+                && Number(masterItem.brush_size_id) === brushSizeId
+        );
+
+        if (exactMatches.length > 0) {
+            return exactMatches;
+        }
+
+        return finishedGoods.filter(
+            (masterItem) => Number(masterItem.brush_size_id) === brushSizeId
+        );
+
+    };
 
     //---------------------------------------------------------
     // Load Customers
@@ -322,22 +352,13 @@ export default function OrderEntry() {
             field === "brand_id" ||
             field === "brush_size_id"
         ) {
-            const brandId = Number(updated[index].brand_id);
-            const brushSizeId = Number(updated[index].brush_size_id);
-
             updated[index].item_id = "";
 
-            if (brandId && brushSizeId) {
-                const matches = itemsMaster.filter(
-                    (masterItem) =>
-                        Number(masterItem.brand_id) === brandId &&
-                        Number(masterItem.brush_size_id) === brushSizeId
-                );
+            const matches = getItemCandidates(updated[index]);
 
-                if (matches.length === 1) {
-                    updated[index].item_id = matches[0].item_id;
-                    updated[index].rate = Number(matches[0].selling_rate || 0);
-                }
+            if (matches.length === 1) {
+                updated[index].item_id = matches[0].item_id;
+                updated[index].rate = Number(matches[0].selling_rate || 0);
             }
         }
 
@@ -888,13 +909,10 @@ export default function OrderEntry() {
                                             )
                                         }
                                     >
-                                        {itemsMaster
-                                            .filter(
-                                                (masterItem) =>
-                                                    Number(masterItem.brand_id) === Number(item.brand_id) &&
-                                                    Number(masterItem.brush_size_id) === Number(item.brush_size_id)
-                                            )
-                                            .map((masterItem) => (
+                                        <MenuItem value="">
+                                            Select item
+                                        </MenuItem>
+                                        {getItemCandidates(item).map((masterItem) => (
                                                 <MenuItem
                                                     key={masterItem.item_id}
                                                     value={masterItem.item_id}
@@ -902,6 +920,11 @@ export default function OrderEntry() {
                                                     {masterItem.item_name}
                                                 </MenuItem>
                                             ))}
+                                        {getItemCandidates(item).length === 0 && (
+                                            <MenuItem value="" disabled>
+                                                No matching finished brush items
+                                            </MenuItem>
+                                        )}
                                     </TextField>
 
                                 </Grid>

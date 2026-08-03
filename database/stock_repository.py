@@ -357,6 +357,10 @@ class StockRepository(BaseRepository):
 
             i.item_name,
 
+            u.unit_code,
+
+            u.unit_name,
+
             sb.current_qty,
 
             sb.average_cost,
@@ -370,6 +374,14 @@ class StockRepository(BaseRepository):
             sb.updated_at
 
         FROM {Tables.ITEMS} i
+
+        LEFT JOIN
+
+            {Tables.UNIT_MASTER} u
+
+        ON
+
+            i.unit_id = u.unit_id
 
         LEFT JOIN
 

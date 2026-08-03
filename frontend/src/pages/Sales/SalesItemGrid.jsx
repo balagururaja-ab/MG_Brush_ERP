@@ -17,6 +17,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 
 import { getItems } from "../../api/itemApi";
+import { FINISHED_GOOD_CATEGORIES } from "../../utils/itemCategories";
 // import { getUnits } from "../../api/unitApi";
 // import { getTaxes } from "../../api/taxApi";
 
@@ -29,6 +30,10 @@ export default function SalesItemGrid({
 }) {
 
     const [itemMaster, setItemMaster] = useState([]);
+
+    const finishedGoods = itemMaster.filter(
+        (item) => FINISHED_GOOD_CATEGORIES.includes(Number(item.category_id))
+    );
 
     // const [unitMaster, setUnitMaster] = useState([]);
 
@@ -245,7 +250,7 @@ export default function SalesItemGrid({
 
                                 >
 
-                                    {itemMaster.map(item => (
+                                    {finishedGoods.map(item => (
 
                                         <MenuItem
 
