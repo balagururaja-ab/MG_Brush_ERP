@@ -171,46 +171,17 @@ class StockRepository(BaseRepository):
         last_purchase_cost: float = 0
     ):
 
-        sql = f"""
-        UPDATE {Tables.STOCK_BALANCE}
-
-        SET
-
-            current_qty=%s,
-
-            average_cost=%s,
-
-            last_purchase_cost=%s,
-
-            updated_at=CURRENT_TIMESTAMP
-
-        WHERE
-
-            item_id=%s
-
-        AND
-
-            warehouse=%s
-        """
-
-        return self.execute(
-
-            sql,
-
-            (
-
-                current_qty,
-
-                average_cost,
-
-                last_purchase_cost,
-
-                item_id,
-
-                warehouse
-
-            )
-
+        return self.update(
+            Tables.STOCK_BALANCE,
+            {
+                "current_qty": current_qty,
+                "average_cost": average_cost,
+                "last_purchase_cost": last_purchase_cost
+            },
+            {
+                "item_id": item_id,
+                "warehouse": warehouse
+            }
         )
 
     # ---------------------------------------------------------

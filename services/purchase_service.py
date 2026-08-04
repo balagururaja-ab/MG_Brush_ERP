@@ -21,6 +21,30 @@ class PurchaseService:
 
         self.stock_service = StockService()
 
+    def _effective_grand_total(
+        self,
+        purchase: dict,
+        items: list[dict]
+    ) -> float:
+
+        header_grand_total = float(
+            purchase.get("grand_total", 0) or 0
+        )
+
+        if not items:
+            return round(header_grand_total, 2)
+
+        items_grand_total = round(
+            sum(float(row.get("total_amount", 0) or 0) for row in items),
+            2
+        )
+
+        # Prefer item totals when available because they are line-level tax-inclusive values.
+        if items_grand_total > 0:
+            return items_grand_total
+
+        return round(header_grand_total, 2)
+
     # ---------------------------------------------------------
     # Generate Purchase Number
     # ---------------------------------------------------------
@@ -462,12 +486,17 @@ class PurchaseService:
 
         existing_payments = self.repo.get_purchase_payment_history(purchase_id)
 
+        items = self.repo.get_purchase_items(purchase_id)
+
         already_paid = round(
             sum(float(row.get("amount", 0)) for row in existing_payments),
             2
         )
 
-        grand_total = float(purchase.get("grand_total", 0))
+        grand_total = self._effective_grand_total(
+            purchase,
+            items
+        )
 
         current_pending = round(
             max(grand_total - already_paid, 0),
@@ -506,7 +535,8 @@ class PurchaseService:
                 "remarks": payment.get("remarks")
             },
             {
-                "payment_status": payment_status
+                "payment_status": payment_status,
+                "grand_total": grand_total
             }
         )
 
@@ -536,6 +566,10 @@ class PurchaseService:
             )
 
         purchase["items"] = self.get_purchase_items(purchase_id)
+        purchase["grand_total"] = self._effective_grand_total(
+            purchase,
+            purchase["items"]
+        )
         purchase["payments"] = self.get_purchase_payment_history(purchase_id)
 
         return purchase

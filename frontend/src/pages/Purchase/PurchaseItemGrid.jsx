@@ -85,9 +85,13 @@ export default function PurchaseItemGrid({
         if (
             bristleText.includes("hog") ||
             bristleText.includes("magic") ||
+            bristleText.includes("taper bristle") ||
+            bristleText.includes("taper") ||
             bristleText.includes("chinese taper") ||
             itemText.includes("hog") ||
             itemText.includes("magic") ||
+            itemText.includes("taper bristle") ||
+            itemText.includes("taper") ||
             itemText.includes("chinese taper")
         ) {
             return [

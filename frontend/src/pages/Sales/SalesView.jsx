@@ -8,7 +8,8 @@ import {
     Button,
     Box,
     TextField,
-    IconButton
+    IconButton,
+    MenuItem
 } from "@mui/material";
 
 import PrintIcon from "@mui/icons-material/Print";
@@ -206,6 +207,7 @@ export default function SalesView() {
                 <td>${item.item_name || "-"}</td>
                 <td style="text-align:right;">${Number(item.quantity || 0).toFixed(2)}</td>
                 <td style="text-align:right;">${Number(item.rate || 0).toFixed(2)}</td>
+                <td style="text-align:right;">${Number(item.discount_percent || 0).toFixed(2)}%</td>
                 <td style="text-align:right;">${Number(item.discount_amount || 0).toFixed(2)}</td>
                 <td style="text-align:right;">${Number(item.taxable_amount || 0).toFixed(2)}</td>
                 ${isGstInvoice ? `<td style="text-align:right;">${Number(item.cgst_amount || 0).toFixed(2)}</td>` : ""}
@@ -260,6 +262,7 @@ export default function SalesView() {
                                 <th>Item</th>
                                 <th style="text-align:right;">Qty</th>
                                 <th style="text-align:right;">Rate</th>
+                                <th style="text-align:right;">Disc %</th>
                                 <th style="text-align:right;">Discount</th>
                                 <th style="text-align:right;">Taxable</th>
                                 ${isGstInvoice ? '<th style="text-align:right;">CGST</th>' : ""}
@@ -306,6 +309,16 @@ export default function SalesView() {
                 return;
             }
 
+            const receiptItemsHtml = (sales.items || []).map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.item_name || "-"}</td>
+                    <td style="text-align:right;">${Number(item.discount_percent || 0).toFixed(2)}%</td>
+                    <td style="text-align:right;">${Number(item.discount_amount || 0).toFixed(2)}</td>
+                    <td style="text-align:right;">${Number(item.total_amount || 0).toFixed(2)}</td>
+                </tr>
+            `).join("");
+
             const receiptHtml = `
                 <html>
                     <head>
@@ -321,6 +334,8 @@ export default function SalesView() {
                             td { padding: 8px; border: 1px solid #ddd; vertical-align: top; }
                             .label { width: 35%; font-weight: 600; background: #f7f7f7; }
                             .amount { font-size: 20px; font-weight: 700; }
+                            .items th, .items td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+                            .items th { background: #f5f5f5; }
                         </style>
                     </head>
                     <body>
@@ -344,6 +359,21 @@ export default function SalesView() {
                             <tr><td class="label">Reference</td><td>${receipt.reference_no || "-"}</td></tr>
                             <tr><td class="label">Amount</td><td class="amount">₹ ${Number(receipt.amount || 0).toFixed(2)}</td></tr>
                             <tr><td class="label">Remarks</td><td>${receipt.remarks || "-"}</td></tr>
+                        </table>
+
+                        <table class="items">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item</th>
+                                    <th style="text-align:right;">Disc %</th>
+                                    <th style="text-align:right;">Discount</th>
+                                    <th style="text-align:right;">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${receiptItemsHtml || '<tr><td colspan="5" style="text-align:center;">No item lines</td></tr>'}
+                            </tbody>
                         </table>
                     </body>
                 </html>

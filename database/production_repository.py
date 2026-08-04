@@ -28,24 +28,24 @@ class ProductionRepository(BaseRepository):
 
         return self.fetch_one(sql, [item_id])
 
-        # ---------------------------------------------------------
-        # Get Active Items
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
+    # Get Active Items
+    # ---------------------------------------------------------
 
-        def get_active_items(self):
+    def get_active_items(self):
 
-                sql = f"""
-                SELECT
-                        i.*,
-                        c.category_name
-                FROM {Tables.ITEMS} i
-                JOIN {Tables.ITEM_CATEGORY} c
-                    ON i.category_id = c.category_id
-                WHERE i.is_active = TRUE
-                ORDER BY i.item_name
-                """
+        sql = f"""
+            SELECT
+                i.*,
+                c.category_name
+            FROM {Tables.ITEMS} i
+            JOIN {Tables.ITEM_CATEGORY} c
+                ON i.category_id = c.category_id
+            WHERE i.is_active = TRUE
+            ORDER BY i.item_name
+        """
 
-                return self.fetch_all(sql)
+        return self.fetch_all(sql)
 
     # ---------------------------------------------------------
     # Brand

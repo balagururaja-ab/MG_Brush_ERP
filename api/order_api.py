@@ -15,7 +15,7 @@ service = OrderService()
 # List Orders
 # ---------------------------------------------------------
 
-@router.get("/")
+@router.get("")
 def list_orders():
 
     return service.list_orders()
@@ -51,7 +51,7 @@ def get_order(
 # Create Order
 # ---------------------------------------------------------
 
-@router.post("/")
+@router.post("")
 def create_order(
     payload: dict
 ):

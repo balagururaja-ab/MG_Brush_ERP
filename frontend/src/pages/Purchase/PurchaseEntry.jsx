@@ -67,11 +67,34 @@ export default function PurchaseEntry() {
         remarks: ""
     });
 
+    const [isRecordingPayment, setIsRecordingPayment] = useState(false);
+
     const navigate = useNavigate();
+
+    const getEffectiveGrandTotal = (purchaseData) => {
+
+        const itemRows = Array.isArray(purchaseData?.items)
+            ? purchaseData.items
+            : [];
+
+        const itemGrandTotal = Number(
+            itemRows.reduce(
+                (total, row) => total + Number(row.total_amount || 0),
+                0
+            ).toFixed(2)
+        );
+
+        if (itemGrandTotal > 0) {
+            return itemGrandTotal;
+        }
+
+        return Number(purchaseData?.grand_total || 0);
+
+    };
 
     const summarizePayments = (purchaseData, payments) => {
 
-        const grandTotal = Number(purchaseData?.grand_total || 0);
+        const grandTotal = getEffectiveGrandTotal(purchaseData);
 
         const paidAmount = Number(
             (payments || []).reduce(
@@ -204,12 +227,25 @@ export default function PurchaseEntry() {
 
     const handleRecordPayment = async () => {
 
+        if (isRecordingPayment) {
+            return;
+        }
+
+        setIsRecordingPayment(true);
+
         try {
 
             if (!payment.amount || payment.amount <= 0) {
                 alert("Enter a valid payment amount.");
                 return;
             }
+
+            // Ensure backend totals are aligned with current edited line items
+            // before validating pending amount for payment.
+            await updatePurchase(id, {
+                ...purchase,
+                items
+            });
 
             const response = await recordPurchasePayment(id, payment);
 
@@ -243,6 +279,11 @@ export default function PurchaseEntry() {
             console.error(err);
 
             alert(err.response?.data?.detail || "Unable to record payment.");
+
+        }
+        finally {
+
+            setIsRecordingPayment(false);
 
         }
 
@@ -390,6 +431,7 @@ export default function PurchaseEntry() {
                                     name="payment_date"
                                     value={payment.payment_date}
                                     onChange={handlePaymentChange}
+                                    disabled={isRecordingPayment}
                                     InputLabelProps={{ shrink: true }}
                                 />
                             </Grid>
@@ -401,6 +443,7 @@ export default function PurchaseEntry() {
                                     name="amount"
                                     value={payment.amount}
                                     onChange={handlePaymentChange}
+                                    disabled={isRecordingPayment}
                                 />
                             </Grid>
                             <Grid item xs={12} md={3}>
@@ -410,6 +453,7 @@ export default function PurchaseEntry() {
                                     name="payment_mode"
                                     value={payment.payment_mode}
                                     onChange={handlePaymentChange}
+                                    disabled={isRecordingPayment}
                                 />
                             </Grid>
                             <Grid item xs={12} md={3}>
@@ -419,6 +463,7 @@ export default function PurchaseEntry() {
                                     name="reference_no"
                                     value={payment.reference_no}
                                     onChange={handlePaymentChange}
+                                    disabled={isRecordingPayment}
                                 />
                             </Grid>
                             <Grid item xs={12}>
@@ -428,15 +473,21 @@ export default function PurchaseEntry() {
                                     name="remarks"
                                     value={payment.remarks}
                                     onChange={handlePaymentChange}
+                                    disabled={isRecordingPayment}
                                 />
                             </Grid>
                             <Grid item xs={12}>
                                 <Button
                                     variant="contained"
                                     onClick={handleRecordPayment}
-                                    disabled={Number(purchase.pending_amount || 0) <= 0}
+                                    disabled={
+                                        isRecordingPayment ||
+                                        Number(purchase.pending_amount || 0) <= 0
+                                    }
                                 >
-                                    Record Payment
+                                    {isRecordingPayment
+                                        ? "Recording Payment..."
+                                        : "Record Payment"}
                                 </Button>
                             </Grid>
                         </Grid>

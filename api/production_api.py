@@ -15,7 +15,7 @@ service = ProductionService()
 # List Productions
 # ---------------------------------------------------------
 
-@router.get("/")
+@router.get("")
 def list_productions():
 
     return service.list_productions()
@@ -51,7 +51,7 @@ def get_production(
 # Create Production
 # ---------------------------------------------------------
 
-@router.post("/")
+@router.post("")
 def create_production(
     payload: dict
 ):

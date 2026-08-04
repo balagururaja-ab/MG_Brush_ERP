@@ -1,0 +1,27 @@
+{
+  "header_grand_total": 77500.0,
+  "items_count": 1,
+  "first_item_keys": [
+    "purchase_detail_id",
+    "purchase_id",
+    "item_id",
+    "unit_id",
+    "quantity",
+    "rate",
+    "discount_percent",
+    "discount_amount",
+    "taxable_amount",
+    "tax_id",
+    "cgst_amount",
+    "sgst_amount",
+    "igst_amount",
+    "total_amount",
+    "line_no",
+    "item_spec",
+    "tax_percent",
+    "item_name",
+    "unit_name"
+  ],
+  "sum_total_amount": 77500.0,
+  "sum_amount": 0.0
+}

@@ -12,6 +12,8 @@ import logging
 from typing import Any
 import re
 
+from psycopg2 import InterfaceError, OperationalError
+
 from database.connection import db
 from database.constants import Tables
 
@@ -55,6 +57,11 @@ class BaseRepository:
         except Exception:
             pass
 
+    def _reconnect(self):
+        """Force a fresh pooled connection after low-level cursor/connection errors."""
+        self.close()
+        self.conn = db.connect()
+
     # ------------------------------------------------------------------
     # Generic Execute
     # ------------------------------------------------------------------
@@ -64,19 +71,26 @@ class BaseRepository:
         query: str,
         params: tuple | list | None = None
     ) -> int:
-        try:
+        for attempt in range(2):
+            try:
 
-            self._ensure_connection()
+                self._ensure_connection()
 
-            with self.conn.cursor() as cursor:
+                with self.conn.cursor() as cursor:
 
-                cursor.execute(query, params)
+                    cursor.execute(query, params)
 
-                return cursor.rowcount
+                    return cursor.rowcount
 
-        except Exception:
-            self._safe_rollback()
-            raise
+            except (InterfaceError, OperationalError):
+                if attempt == 0:
+                    self._reconnect()
+                    continue
+                self._safe_rollback()
+                raise
+            except Exception:
+                self._safe_rollback()
+                raise
 
     # ------------------------------------------------------------------
     # Fetch One
@@ -87,19 +101,26 @@ class BaseRepository:
         query: str,
         params: tuple | list | None = None
     ) -> dict | None:
-        try:
+        for attempt in range(2):
+            try:
 
-            self._ensure_connection()
+                self._ensure_connection()
 
-            with self.conn.cursor() as cursor:
+                with self.conn.cursor() as cursor:
 
-                cursor.execute(query, params)
+                    cursor.execute(query, params)
 
-                return cursor.fetchone()
+                    return cursor.fetchone()
 
-        except Exception:
-            self._safe_rollback()
-            raise
+            except (InterfaceError, OperationalError):
+                if attempt == 0:
+                    self._reconnect()
+                    continue
+                self._safe_rollback()
+                raise
+            except Exception:
+                self._safe_rollback()
+                raise
 
     # ------------------------------------------------------------------
     # Fetch All
@@ -110,19 +131,26 @@ class BaseRepository:
         query: str,
         params: tuple | list | None = None
     ) -> list[dict]:
-        try:
+        for attempt in range(2):
+            try:
 
-            self._ensure_connection()
+                self._ensure_connection()
 
-            with self.conn.cursor() as cursor:
+                with self.conn.cursor() as cursor:
 
-                cursor.execute(query, params)
+                    cursor.execute(query, params)
 
-                return cursor.fetchall()
+                    return cursor.fetchall()
 
-        except Exception:
-            self._safe_rollback()
-            raise
+            except (InterfaceError, OperationalError):
+                if attempt == 0:
+                    self._reconnect()
+                    continue
+                self._safe_rollback()
+                raise
+            except Exception:
+                self._safe_rollback()
+                raise
 
     # ------------------------------------------------------------------
     # Generic INSERT

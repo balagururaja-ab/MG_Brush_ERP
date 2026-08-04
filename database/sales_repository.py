@@ -115,10 +115,15 @@ class SalesRepository(BaseRepository):
     ):
 
         sql = f"""
-            SELECT *
-            FROM {Tables.SALES_DETAILS}
-            WHERE sales_id=%s
-            ORDER BY line_no
+            SELECT
+                sd.*, 
+                i.item_name,
+                i.item_code
+            FROM {Tables.SALES_DETAILS} sd
+            LEFT JOIN {Tables.ITEMS} i
+                ON sd.item_id = i.item_id
+            WHERE sd.sales_id = %s
+            ORDER BY sd.line_no
         """
 
         return self.fetch_all(

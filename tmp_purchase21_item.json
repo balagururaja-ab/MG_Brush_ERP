@@ -1,0 +1,12 @@
+{
+  "quantity": "25.000",
+  "rate": "3100.00",
+  "discount_percent": "0.00",
+  "discount_amount": "0.00",
+  "taxable_amount": "77500.00",
+  "tax_percent": "0.00",
+  "cgst_amount": "0.00",
+  "sgst_amount": "0.00",
+  "igst_amount": "0.00",
+  "total_amount": "77500.00"
+}

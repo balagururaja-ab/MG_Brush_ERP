@@ -23,6 +23,10 @@ class StringHelper:
 
 
 class ProductionService:
+
+    # Production completion posts finished goods stock.
+    # Raw material consumption is handled separately via material issue.
+    AUTO_CONSUME_RM_ON_COMPLETE = False
     
 
     def __init__(self):
@@ -268,7 +272,8 @@ class ProductionService:
         self,
         production: dict,
         rm_items: list[dict],
-        fg_items: list[dict]
+        fg_items: list[dict],
+        enforce_stock_check: bool = True
     ):
 
         self.validate_header(
@@ -290,7 +295,10 @@ class ProductionService:
 
         # Stock sufficiency is enforced only when completing production.
         # Draft/cancelled entries are allowed for planning or later completion.
-        if production.get("status", "DRAFT") == "COMPLETED":
+        if (
+            enforce_stock_check
+            and production.get("status", "DRAFT") == "COMPLETED"
+        ):
 
             for item in rm_items:
 
@@ -494,7 +502,11 @@ class ProductionService:
         self.validate_production(
             production,
             rm_items,
-            fg_items
+            fg_items,
+            enforce_stock_check=(
+                production.get("status", "DRAFT") == "COMPLETED"
+                and self.AUTO_CONSUME_RM_ON_COMPLETE
+            )
         )
 
         production["production_no"] = self.generate_production_no()
@@ -588,21 +600,23 @@ class ProductionService:
                 )
 
             if production.get("status", "DRAFT") == "COMPLETED":
+                linked_rm_items = []
 
-                linked_rm_items = self._build_component_consumption(fg_items)
+                if self.AUTO_CONSUME_RM_ON_COMPLETE:
+                    linked_rm_items = self._build_component_consumption(fg_items)
 
-                for linked_item in linked_rm_items:
-                    self.stock_service.validate_stock(
-                        linked_item["item_id"],
-                        float(linked_item["quantity"])
-                    )
+                    for linked_item in linked_rm_items:
+                        self.stock_service.validate_stock(
+                            linked_item["item_id"],
+                            float(linked_item["quantity"])
+                        )
 
                 self.stock_service.production_stock(
                     production_id=production_id,
                     production_no=production["production_no"],
                     rm_items=linked_rm_items,
                     fg_items=fg_items,
-                    consume_rm=True
+                    consume_rm=self.AUTO_CONSUME_RM_ON_COMPLETE
                 )
 
             # -----------------------------------------
@@ -656,15 +670,33 @@ class ProductionService:
             rm_items = self.sanitize_line_items(rm_items)
             fg_items = self.sanitize_line_items(fg_items)
 
-            self.validate_production(
-                production,
-                rm_items,
-                fg_items
-            )
-
             previous_status = existing.get("status")
             new_status = production.get("status", previous_status)
             production_no = existing.get("production_no")
+
+            should_post_stock = False
+
+            if new_status == "COMPLETED":
+
+                if previous_status != "COMPLETED":
+                    should_post_stock = True
+                else:
+                    # Backfill missing stock entries for older completed records.
+                    already_posted = self.stock_service.repo.has_production_posting(
+                        production_id=production_id,
+                        production_no=production_no
+                    )
+                    should_post_stock = not already_posted
+
+            self.validate_production(
+                production,
+                rm_items,
+                fg_items,
+                enforce_stock_check=(
+                    should_post_stock
+                    and self.AUTO_CONSUME_RM_ON_COMPLETE
+                )
+            )
 
             # -----------------------------------------
             # Update Header
@@ -786,36 +818,24 @@ class ProductionService:
 
                 )
 
-            should_post_stock = False
-
-            if new_status == "COMPLETED":
-
-                if previous_status != "COMPLETED":
-                    should_post_stock = True
-                else:
-                    # Backfill missing stock entries for older completed records.
-                    already_posted = self.stock_service.repo.has_production_posting(
-                        production_id=production_id,
-                        production_no=production_no
-                    )
-                    should_post_stock = not already_posted
-
             if should_post_stock:
+                linked_rm_items = []
 
-                linked_rm_items = self._build_component_consumption(fg_items)
+                if self.AUTO_CONSUME_RM_ON_COMPLETE:
+                    linked_rm_items = self._build_component_consumption(fg_items)
 
-                for linked_item in linked_rm_items:
-                    self.stock_service.validate_stock(
-                        linked_item["item_id"],
-                        float(linked_item["quantity"])
-                    )
+                    for linked_item in linked_rm_items:
+                        self.stock_service.validate_stock(
+                            linked_item["item_id"],
+                            float(linked_item["quantity"])
+                        )
 
                 self.stock_service.production_stock(
                     production_id=production_id,
                     production_no=production_no,
                     rm_items=linked_rm_items,
                     fg_items=fg_items,
-                    consume_rm=True
+                    consume_rm=self.AUTO_CONSUME_RM_ON_COMPLETE
                 )
 
             self.repo.commit()
