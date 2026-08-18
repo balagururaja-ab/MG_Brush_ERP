@@ -12,6 +12,8 @@ Adjustment-> Manual Adjustment
 from database.stock_repository import StockRepository
 from datetime import date
 
+from database.constants import FINISHED_GOOD_CATEGORIES
+
 
 class StockService:
 
@@ -215,6 +217,22 @@ class StockService:
         rate: float
 
     ):
+
+        item = self.repo.get_item(item_id)
+
+        if item is None:
+            raise ValueError("Invalid item selected.")
+
+        if item.get("category_id") in FINISHED_GOOD_CATEGORIES:
+            raise ValueError(
+                "Opening stock is allowed only for raw materials/components, not finished brushes."
+            )
+
+        if quantity <= 0:
+            raise ValueError("Opening quantity must be greater than zero.")
+
+        if rate < 0:
+            raise ValueError("Opening rate cannot be negative.")
 
         self.repo.create_stock_ledger(
 

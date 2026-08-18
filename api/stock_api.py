@@ -105,21 +105,30 @@ def opening_stock(
     request: OpeningStockRequest
 ):
 
-    service.opening_stock(
+    try:
 
-        item_id=request.item_id,
+        service.opening_stock(
 
-        quantity=request.quantity,
+            item_id=request.item_id,
 
-        rate=request.rate
+            quantity=request.quantity,
 
-    )
+            rate=request.rate
 
-    return {
+        )
 
-        "message": "Opening stock saved successfully."
+        return {
 
-    }
+            "message": "Opening stock saved successfully."
+
+        }
+
+    except ValueError as ex:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(ex)
+        )
 
 
 # ---------------------------------------------------------

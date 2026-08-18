@@ -108,6 +108,14 @@ export default function AppHeader() {
                     Production
                 </Button>
 
+                <Button
+                    color="inherit"
+                    component={Link}
+                    to="/reports"
+                >
+                    Reports
+                </Button>
+
             </Toolbar>
 
         </AppBar>

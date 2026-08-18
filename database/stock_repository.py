@@ -12,6 +12,16 @@ from database.constants import Tables
 
 class StockRepository(BaseRepository):
 
+    def get_item(self, item_id: int):
+
+        return self.find_one(
+            Tables.ITEMS,
+            {
+                "item_id": item_id,
+                "is_active": True
+            }
+        )
+
     # ---------------------------------------------------------
     # Check Production Posting Exists
     # ---------------------------------------------------------

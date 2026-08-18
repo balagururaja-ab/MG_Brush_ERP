@@ -13,6 +13,7 @@ from api.stock_api import router as stock_router
 from api.order_api import router as order_router
 from api.master_api import router as master_router
 from api.production_api import router as production_router
+from api.reports_api import router as reports_router
 
 
 @asynccontextmanager
@@ -104,4 +105,10 @@ app.include_router(
 
     tags=["Production"]
 
+)
+
+app.include_router(
+    reports_router,
+    prefix="/api/reports",
+    tags=["Reports"]
 )

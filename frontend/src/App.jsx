@@ -25,6 +25,7 @@ import OrderView from "./pages/Order/OrderView";
 import ProductionList from "./pages/Product/ProductionList";
 import ProductionEntry from "./pages/Product/ProductionEntry";
 import ProductionView from "./pages/Product/ProductionView";
+import ReportsDashboard from "./pages/Reports/ReportsDashboard";
 
 function App() {
     return (
@@ -128,6 +129,11 @@ function App() {
                 <Route
                     path="/productions/view/:id"
                     element={<ProductionView />}
+                />
+
+                <Route
+                    path="/reports"
+                    element={<ReportsDashboard />}
                 />
             </Routes>
         </>

@@ -65,7 +65,11 @@ export default function StockDashboard() {
 
             icon: <AddBoxIcon sx={{ fontSize: 50 }} />,
 
-            path: "/stock/opening"
+            path: "/stock/opening",
+
+            disabled: false,
+
+            note: "Raw materials only"
 
         },
 
@@ -301,7 +305,7 @@ export default function StockDashboard() {
 
                                 >
 
-                                    Coming Soon
+                                    {card.note || "Coming Soon"}
 
                                 </Typography>
 

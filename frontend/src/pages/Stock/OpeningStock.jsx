@@ -45,6 +45,8 @@ import {
 
 } from "../../api/itemApi";
 
+const FINISHED_GOOD_CATEGORY_IDS = new Set([23, 24]);
+
 export default function OpeningStock() {
 
     const [form, setForm] = useState({
@@ -77,7 +79,11 @@ export default function OpeningStock() {
 
             const data = await getItems();
 
-            setItems(data);
+            const rawMaterialItems = (data || []).filter(
+                (item) => !FINISHED_GOOD_CATEGORY_IDS.has(Number(item.category_id))
+            );
+
+            setItems(rawMaterialItems);
 
         }
         catch (err) {
@@ -216,6 +222,14 @@ export default function OpeningStock() {
 
                     Opening Stock Entry
 
+                </Typography>
+
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    mb={2}
+                >
+                    Only raw materials/components are allowed here. Finished brushes are blocked.
                 </Typography>
 
                 {

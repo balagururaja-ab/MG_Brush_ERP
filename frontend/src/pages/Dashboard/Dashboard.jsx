@@ -56,6 +56,11 @@ export default function Dashboard() {
         {
             title: "Production",
             route: "/productions"
+        },
+
+        {
+            title: "Reports",
+            route: "/reports"
         }
 
     ];
