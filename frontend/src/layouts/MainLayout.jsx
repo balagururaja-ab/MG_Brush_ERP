@@ -11,7 +11,9 @@ export default function MainLayout({ children }) {
         <Box
             sx={{
                 display: "flex",
-                minHeight: "100vh"
+                minHeight: "100vh",
+                background: "radial-gradient(circle at top, rgba(14, 93, 67, 0.08), transparent 40%)",
+                color: "#17312a"
             }}
         >
 
@@ -31,8 +33,8 @@ export default function MainLayout({ children }) {
                     component="main"
                     sx={{
                         flexGrow: 1,
-                        p: 3,
-                        bgcolor: "#f5f5f5"
+                        p: { xs: 2, md: 4 },
+                        background: "linear-gradient(180deg, rgba(243,247,245,0.9) 0%, rgba(230,238,235,0.95) 100%)"
                     }}
                 >
 

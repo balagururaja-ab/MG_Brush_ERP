@@ -20,7 +20,7 @@ import {
 
 import MainLayout from "../../layouts/MainLayout";
 
-import companyLogo from "../../assets/selvi_brush_logo.png";
+import companyLogo from "../../assets/IMG-20260829-WA0004.jpg";
 
 import {
     getPurchase
@@ -86,7 +86,8 @@ export default function PurchaseView() {
                     <style>
                         body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
                         .header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
-                        .logo { width: 64px; height: 64px; object-fit: contain; }
+                        .logo-wrap { width: 92px; height: 92px; padding: 6px; border-radius: 16px; background: #fff; border: 1px solid #d7ddd9; display: flex; align-items: center; justify-content: center; }
+                        .logo { width: 100%; height: 100%; object-fit: contain; }
                         .company { font-size: 24px; font-weight: 700; margin: 0; }
                         h2 { margin-bottom: 8px; }
                         .muted { color: #666; margin-bottom: 18px; }
@@ -98,7 +99,9 @@ export default function PurchaseView() {
                 </head>
                 <body>
                     <div class="header">
-                        <img class="logo" src="${companyLogo}" alt="MG Brush ERP Logo" />
+                        <div class="logo-wrap">
+                            <img class="logo" src="${companyLogo}" alt="MG Brush ERP Logo" />
+                        </div>
                         <div>
                             <p class="company">MG Brush ERP</p>
                             <div class="muted">Generated from MG Brush ERP</div>

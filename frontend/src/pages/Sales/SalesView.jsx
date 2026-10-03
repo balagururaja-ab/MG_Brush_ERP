@@ -28,7 +28,7 @@ import {
     getSalesPaymentReceipt
 } from "../../api/salesApi";
 
-import companyLogo from "../../assets/selvi_brush_logo.png";
+import companyLogo from "../../assets/IMG-20260829-WA0004.jpg";
 
 export default function SalesView() {
 
@@ -224,7 +224,8 @@ export default function SalesView() {
                     <style>
                         body { font-family: Arial, sans-serif; padding: 20px; color: #222; }
                         .header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-                        .logo { width: 62px; height: 62px; object-fit: contain; }
+                        .logo-wrap { width: 92px; height: 92px; padding: 6px; border-radius: 16px; background: #fff; border: 1px solid #d7ddd9; display: flex; align-items: center; justify-content: center; }
+                        .logo { width: 100%; height: 100%; object-fit: contain; }
                         .company { margin: 0; font-size: 24px; font-weight: 700; }
                         .muted { color: #666; margin: 0; }
                         .meta { margin-top: 12px; margin-bottom: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
@@ -239,7 +240,9 @@ export default function SalesView() {
                 </head>
                 <body>
                     <div class="header">
-                        <img class="logo" src="${companyLogo}" alt="MG Brush ERP Logo" />
+                        <div class="logo-wrap">
+                            <img class="logo" src="${companyLogo}" alt="MG Brush ERP Logo" />
+                        </div>
                         <div>
                             <p class="company">MG Brush ERP</p>
                             <p class="muted">Sales Invoice</p>
