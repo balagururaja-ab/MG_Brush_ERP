@@ -113,6 +113,34 @@ class StockService:
 
         )
 
+    def reverse_sales_stock(
+        self,
+        sales_id: int,
+        sales_no: str,
+        item: dict,
+        remarks: str = "Sales Reversal"
+    ):
+
+        quantity = float(item["quantity"])
+        self.repo.create_stock_ledger(
+            {
+                "transaction_type": "ADJUSTMENT",
+                "reference_id": sales_id,
+                "reference_no": sales_no,
+                "item_id": item["item_id"],
+                "warehouse": "MAIN",
+                "qty_in": quantity,
+                "qty_out": 0,
+                "unit_cost": float(item.get("rate") or 0),
+                "remarks": remarks
+            }
+        )
+        self.repo.increase_stock(
+            item_id=item["item_id"],
+            quantity=quantity,
+            unit_cost=float(item.get("rate") or 0)
+        )
+
     # ---------------------------------------------------------
     # Production Stock
     # ---------------------------------------------------------

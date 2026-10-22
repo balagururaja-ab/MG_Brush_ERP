@@ -38,7 +38,8 @@ import {
 
 import {
 
-    getOrder
+    getOrder,
+    confirmOrder
 
 } from "../../api/orderApi";
 
@@ -116,6 +117,18 @@ export default function OrderView() {
     const handleCreateSales = async () => {
 
         try {
+
+            if (order.status === "DRAFT") {
+
+                await confirmOrder(id);
+                setOrder((previous) => ({
+                    ...previous,
+                    status: "CONFIRMED"
+                }));
+
+                return;
+
+            }
 
             if (order.status === "INVOICED") {
 
@@ -255,8 +268,8 @@ export default function OrderView() {
 
                             disabled={
 
-                                order.status !== "CONFIRMED"
-                                && order.status !== "INVOICED"
+                                loading
+                                || !["DRAFT", "CONFIRMED", "INVOICED"].includes(order.status)
 
                             }
 
@@ -274,7 +287,9 @@ export default function OrderView() {
 
                                         ? "Create Sales"
 
-                                        : "Confirm Order"
+                                        : order.status === "DRAFT"
+                                            ? "Confirm Order"
+                                            : "Order Unavailable"
 
                             }
 

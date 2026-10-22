@@ -47,7 +47,7 @@ class ProductionHeader(BaseModel):
 
     remarks: Optional[str] = None
 
-    status: Optional[str] = "DRAFT"
+    status: Optional[str] = "COMPLETED"
 
 
 # ---------------------------------------------------------

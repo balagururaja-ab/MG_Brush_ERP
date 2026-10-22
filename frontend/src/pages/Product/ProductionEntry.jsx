@@ -107,7 +107,7 @@ const ProductionEntry = () => {
 
             .substring(0, 10),
 
-        status: "DRAFT",
+        status: "COMPLETED",
 
         remarks: ""
 
@@ -230,7 +230,7 @@ const ProductionEntry = () => {
             setProduction({
                 production_no: header?.production_no || "",
                 production_date: header?.production_date || new Date().toISOString().substring(0, 10),
-                status: header?.status || "DRAFT",
+                status: header?.status || "COMPLETED",
                 remarks: header?.remarks || ""
             });
 
@@ -575,6 +575,8 @@ const ProductionEntry = () => {
                                 handleHeaderChange
 
                             }
+
+                            helperText="Finished goods enter stock when production is completed."
 
                         >
 

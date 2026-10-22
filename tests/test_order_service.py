@@ -47,3 +47,38 @@ def test_update_order_filters_out_non_header_fields_before_persisting():
         "status": "DRAFT",
         "remarks": "Updated"
     }
+
+
+def test_confirm_order_transitions_draft_order_to_confirmed():
+    service = OrderService()
+    service.repo = Mock()
+    service.repo.get_order_by_id.return_value = {
+        "order_id": 6,
+        "status": "DRAFT",
+    }
+
+    service.confirm_order(6)
+
+    service.repo.update_order.assert_called_once_with(
+        6,
+        {"status": "CONFIRMED"},
+    )
+    service.repo.commit.assert_called_once()
+
+
+def test_confirm_order_rejects_cancelled_order():
+    service = OrderService()
+    service.repo = Mock()
+    service.repo.get_order_by_id.return_value = {
+        "order_id": 6,
+        "status": "CANCELLED",
+    }
+
+    try:
+        service.confirm_order(6)
+    except ValueError as error:
+        assert "Only draft orders can be confirmed" in str(error)
+    else:
+        raise AssertionError("Cancelled orders must not be confirmed.")
+
+    service.repo.update_order.assert_not_called()

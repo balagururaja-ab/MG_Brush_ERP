@@ -182,12 +182,35 @@ class SalesService:
         if existing is None:
             raise ValueError("Sales entry not found.")
 
+        previous_items = self.repo.get_sales_items(sales_id)
+        previous_quantities: dict[int, float] = {}
+        previous_item_by_id: dict[int, dict] = {}
+        new_quantities: dict[int, float] = {}
+        new_item_by_id: dict[int, dict] = {}
+
+        for item in previous_items:
+            item_id = int(item["item_id"])
+            previous_quantities[item_id] = (
+                previous_quantities.get(item_id, 0.0)
+                + float(item["quantity"])
+            )
+            previous_item_by_id[item_id] = item
+
         for item in items:
             self.ensure_item_fields(item)
-            self.stock_service.validate_stock(
-                item["item_id"],
-                float(item["quantity"])
+            item_id = int(item["item_id"])
+            new_quantities[item_id] = (
+                new_quantities.get(item_id, 0.0)
+                + float(item["quantity"])
             )
+            new_item_by_id[item_id] = item
+
+        stock_deltas = {}
+        for item_id in previous_quantities.keys() | new_quantities.keys():
+            delta = new_quantities.get(item_id, 0.0) - previous_quantities.get(item_id, 0.0)
+            stock_deltas[item_id] = delta
+            if delta > 0:
+                self.stock_service.validate_stock(item_id, delta)
 
         totals = self.calculate_totals(items)
 
@@ -211,6 +234,28 @@ class SalesService:
                 item["line_no"] = line_no
 
                 self.repo.create_sales_item(item)
+
+            sales_no = existing.get("sales_no") or str(sales_id)
+            for item_id, delta in stock_deltas.items():
+                if delta > 0:
+                    self.stock_service.sales_stock(
+                        sales_id=sales_id,
+                        sales_no=sales_no,
+                        item={
+                            **new_item_by_id[item_id],
+                            "quantity": delta
+                        }
+                    )
+                elif delta < 0:
+                    self.stock_service.reverse_sales_stock(
+                        sales_id=sales_id,
+                        sales_no=sales_no,
+                        item={
+                            **previous_item_by_id[item_id],
+                            "quantity": abs(delta)
+                        },
+                        remarks="Sales Edit Reversal"
+                    )
 
             self.repo.commit()
             return sales_id
@@ -486,7 +531,29 @@ class SalesService:
         if sale is None:
             raise ValueError("Sales entry not found.")
 
-        self.repo.delete_sales(sales_id)
+        try:
+            sales_no = sale.get("sales_no") or str(sales_id)
+            for item in self.repo.get_sales_items(sales_id):
+                self.stock_service.reverse_sales_stock(
+                    sales_id=sales_id,
+                    sales_no=sales_no,
+                    item=item,
+                    remarks="Sales Cancellation"
+                )
+
+            self.repo.delete_sales(sales_id)
+            order_id = sale.get("order_id")
+            if order_id:
+                self.order_repo.update_order(
+                    int(order_id),
+                    {"status": "CONFIRMED"}
+                )
+                self.order_repo.commit()
+            self.repo.commit()
+        except Exception:
+            self.repo.rollback()
+            self.order_repo.rollback()
+            raise
 
     # ---------------------------------------------------------
     # Validate Customer

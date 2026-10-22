@@ -124,6 +124,26 @@ def update_order(
 
 
 # ---------------------------------------------------------
+# Confirm Order
+# ---------------------------------------------------------
+
+@router.post("/{order_id}/confirm")
+def confirm_order(order_id: int):
+
+    try:
+        service.confirm_order(order_id)
+        return {
+            "message": "Order confirmed successfully.",
+            "status": "CONFIRMED"
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+
+
+# ---------------------------------------------------------
 # Delete Order
 # ---------------------------------------------------------
 

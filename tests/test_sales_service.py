@@ -114,6 +114,14 @@ def test_update_sales_backfills_unit_id_from_item_master():
         "gst_percent": 0,
         "invoice_no": None,
     }
+    service.repo.get_sales_items.return_value = [
+        {
+            "item_id": 55,
+            "quantity": 4,
+            "rate": 160,
+            "unit_id": 1,
+        }
+    ]
     service.repo.get_item.return_value = {
         "item_id": 55,
         "unit_id": 1,
@@ -148,3 +156,44 @@ def test_update_sales_backfills_unit_id_from_item_master():
 
     created_item = service.repo.create_sales_item.call_args.args[0]
     assert created_item["unit_id"] == 1
+    service.stock_service.validate_stock.assert_called_once_with(55, 6.0)
+    service.stock_service.sales_stock.assert_called_once()
+    assert service.stock_service.sales_stock.call_args.kwargs["item"]["quantity"] == 6.0
+
+
+def test_delete_sales_restores_stock_and_reopens_order_for_sales():
+    service = SalesService()
+    service.repo = Mock()
+    service.order_repo = Mock()
+    service.stock_service = Mock()
+
+    service.repo.get_sales_by_id.return_value = {
+        "sales_id": 15,
+        "sales_no": "SAL-2026-000015",
+        "order_id": 7,
+    }
+    service.repo.get_sales_items.return_value = [
+        {
+            "item_id": 55,
+            "quantity": 5,
+            "rate": 100,
+        }
+    ]
+
+    service.delete_sales(15)
+
+    service.stock_service.reverse_sales_stock.assert_called_once_with(
+        sales_id=15,
+        sales_no="SAL-2026-000015",
+        item={
+            "item_id": 55,
+            "quantity": 5,
+            "rate": 100,
+        },
+        remarks="Sales Cancellation",
+    )
+    service.repo.delete_sales.assert_called_once_with(15)
+    service.order_repo.update_order.assert_called_once_with(
+        7,
+        {"status": "CONFIRMED"},
+    )

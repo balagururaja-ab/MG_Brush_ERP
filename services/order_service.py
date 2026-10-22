@@ -277,6 +277,9 @@ class OrderService:
 
         clean_order = self.sanitize_order_payload(order)
 
+        if clean_order.get("status") == "INVOICED":
+            raise ValueError("Orders are invoiced only when sales are created.")
+
         self.validate_customer(
             clean_order["customer_id"]
         )
@@ -376,6 +379,9 @@ class OrderService:
 
         clean_order = self.sanitize_order_payload(order)
 
+        if clean_order.get("status") == "INVOICED":
+            raise ValueError("Orders are invoiced only when sales are created.")
+
         self.validate_customer(
             clean_order["customer_id"]
         )
@@ -414,6 +420,9 @@ class OrderService:
             raise ValueError(
                 "Order not found."
             )
+
+        if existing.get("status") == "INVOICED":
+            raise ValueError("Invoiced orders cannot be modified.")
 
         try:
 
@@ -473,6 +482,34 @@ class OrderService:
 
             raise
 
+    def confirm_order(
+        self,
+        order_id: int
+    ):
+
+        order = self.repo.get_order_by_id(order_id)
+        if order is None:
+            raise ValueError("Order not found.")
+
+        status = order.get("status")
+        if status == "CONFIRMED":
+            return order_id
+        if status != "DRAFT":
+            raise ValueError(
+                f"Only draft orders can be confirmed. Current status: {status}."
+            )
+
+        try:
+            self.repo.update_order(
+                order_id,
+                {"status": "CONFIRMED"}
+            )
+            self.repo.commit()
+            return order_id
+        except Exception:
+            self.repo.rollback()
+            raise
+
     # ---------------------------------------------------------
     # Delete Order
     # ---------------------------------------------------------
@@ -494,6 +531,9 @@ class OrderService:
             raise ValueError(
                 "Order not found."
             )
+
+        if order.get("status") == "INVOICED":
+            raise ValueError("Invoiced orders cannot be deleted.")
 
         try:
 

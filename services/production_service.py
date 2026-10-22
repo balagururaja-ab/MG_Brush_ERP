@@ -57,7 +57,7 @@ class ProductionService:
 
         status = production.get(
             "status",
-            "DRAFT"
+            "COMPLETED"
         )
 
         allowed_status = [
@@ -297,7 +297,7 @@ class ProductionService:
         # Draft/cancelled entries are allowed for planning or later completion.
         if (
             enforce_stock_check
-            and production.get("status", "DRAFT") == "COMPLETED"
+            and production.get("status", "COMPLETED") == "COMPLETED"
         ):
 
             for item in rm_items:
@@ -498,6 +498,7 @@ class ProductionService:
 
         rm_items = self.sanitize_line_items(rm_items)
         fg_items = self.sanitize_line_items(fg_items)
+        production.setdefault("status", "COMPLETED")
 
         self.validate_production(
             production,
@@ -663,6 +664,14 @@ class ProductionService:
 
                 "Production not found."
 
+            )
+
+        if self.stock_service.repo.has_production_posting(
+            production_id=production_id,
+            production_no=existing.get("production_no")
+        ):
+            raise ValueError(
+                "Production has already affected stock and cannot be edited."
             )
 
         try:
@@ -872,6 +881,14 @@ class ProductionService:
 
                 "Production not found."
 
+            )
+
+        if self.stock_service.repo.has_production_posting(
+            production_id=production_id,
+            production_no=production.get("production_no")
+        ):
+            raise ValueError(
+                "Production has already affected stock and cannot be deleted."
             )
 
         try:

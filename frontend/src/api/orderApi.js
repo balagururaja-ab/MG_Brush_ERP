@@ -94,6 +94,20 @@ export async function updateOrder(
 }
 
 // -----------------------------------------------------
+// Confirm Order
+// -----------------------------------------------------
+
+export async function confirmOrder(orderId) {
+
+    const response = await axios.post(
+        `${API}/${orderId}/confirm`
+    );
+
+    return response.data;
+
+}
+
+// -----------------------------------------------------
 // Delete Order
 // -----------------------------------------------------
 

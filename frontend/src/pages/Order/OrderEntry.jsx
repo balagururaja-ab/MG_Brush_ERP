@@ -702,12 +702,6 @@ export default function OrderEntry() {
 
                             </MenuItem>
 
-                            <MenuItem value="INVOICED">
-
-                                INVOICED
-
-                            </MenuItem>
-
                             <MenuItem value="CANCELLED">
 
                                 CANCELLED
